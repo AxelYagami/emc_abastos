@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(php artisan:*)",
+      "Bash(xxd:*)",
+      "Bash(php -r \"\nrequire ''vendor/autoload.php'';\n$app = require_once ''bootstrap/app.php'';\n$app->make\\(''Illuminate\\\\Contracts\\\\Console\\\\Kernel''\\)->bootstrap\\(\\);\n\necho ''Empresas: '' . DB::table\\(''empresas''\\)->count\\(\\) . PHP_EOL;\necho ''Usuarios: '' . DB::table\\(''usuarios''\\)->count\\(\\) . PHP_EOL;\necho ''Categorías: '' . DB::table\\(''categorias''\\)->count\\(\\) . PHP_EOL;\necho ''Productos: '' . DB::table\\(''productos''\\)->count\\(\\) . PHP_EOL;\n\necho PHP_EOL . ''=== CREDENCIALES ==='' . PHP_EOL;\n$users = DB::table\\(''usuarios''\\)->select\\(''email''\\)->get\\(\\);\nforeach \\($users as $u\\) {\n    echo ''Email: '' . $u->email . PHP_EOL;\n}\necho ''Password: ChangeMe#2026'' . PHP_EOL;\n\")",
+      "Bash(composer require:*)",
+      "Bash(composer install:*)",
+      "Bash(icacls:*)",
+      "Bash(chmod:*)",
+      "Bash(composer dump-autoload:*)",
+      "Bash(php -l:*)",
+      "Bash(C:/php/php.exe:*)",
+      "Bash(taskkill:*)"
+    ]
+  }
+}
