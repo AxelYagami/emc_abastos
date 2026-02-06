@@ -31,7 +31,20 @@ class ProductosController extends Controller
         return view('admin.productos.create', compact('categorias'));
     }
 
-    public function store(Request $request)
+    use App\Jobs\FetchProductImageJob;
+
+public function store(Request \)
+{
+    // Tu lógica de validación y creación de producto
+    \ = Producto::create(\->all());
+
+    // Dispara el job para obtener la imagen si no se sube una
+    if (!\->meta['imagen_url']) {
+        FetchProductImageJob::dispatch(\->id);  // Esta línea dispara el job
+    }
+
+    // Redirige o retorna según tu lógica
+}(Request $request)
     {
         $empresaId = session('empresa_id');
 
