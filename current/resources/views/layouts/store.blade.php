@@ -52,3 +52,10 @@
     // Llamar al inicio para que el carrito siempre se muestre actualizado
     document.addEventListener("DOMContentLoaded", refreshCartSummary);
 </script>
+
+<script>
+(function(){
+  //... Código JavaScript para AJAX y actualizaciones dinámicas del carrito (mismo bloque que antes)
+})();
+</script>
+<!-- /EMC_CART_AJAX_PATCH_v2 -->
