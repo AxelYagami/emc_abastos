@@ -5,16 +5,24 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Categoria;
 use App\Models\Producto;
+use App\Services\ProductImageService;
 use Illuminate\Http\Request;
 
 class ProductosController extends Controller
 {
+    protected ProductImageService $imageService;
+
+    public function __construct(ProductImageService $imageService)
+    {
+        $this->imageService = $imageService;
+    }
+
     public function index(Request $request)
     {
         $empresaId = session('empresa_id');
         $search = trim($request->get('q', ''));
 
-        $query = Producto::where('empresa_id', $empresaId);
+        $query = Producto::where('empresa_id', $empresaId)->with('categoria');
 
         if ($search !== '') {
             $query->where('nombre', 'ilike', "%{$search}%");
@@ -31,20 +39,7 @@ class ProductosController extends Controller
         return view('admin.productos.create', compact('categorias'));
     }
 
-    use App\Jobs\FetchProductImageJob;
-
-public function store(Request \)
-{
-    // Tu lógica de validación y creación de producto
-    \ = Producto::create(\->all());
-
-    // Dispara el job para obtener la imagen si no se sube una
-    if (!\->meta['imagen_url']) {
-        FetchProductImageJob::dispatch(\->id);  // Esta línea dispara el job
-    }
-
-    // Redirige o retorna según tu lógica
-}(Request $request)
+    public function store(Request $request)
     {
         $empresaId = session('empresa_id');
 
@@ -56,12 +51,16 @@ public function store(Request \)
             'stock' => ['nullable','integer','min:0'],
             'categoria_id' => ['nullable','integer', 'exists:categorias,id'],
             'activo' => ['required','boolean'],
+            'imagen' => ['nullable','image','max:2048'],
+            'imagen_url' => ['nullable','url'],
+            'image_source' => ['nullable','in:manual,auto,default'],
+            'is_featured' => ['nullable','boolean'],
         ]);
 
         if (!empty($data['categoria_id'])) {
             $cat = Categoria::where('id', $data['categoria_id'])->where('empresa_id', $empresaId)->first();
             if (!$cat) {
-                return back()->withErrors(['categoria_id' => 'La categoría no pertenece a la empresa actual.'])->withInput();
+                return back()->withErrors(['categoria_id' => 'La categoria no pertenece a la empresa actual.'])->withInput();
             }
         }
 
@@ -73,9 +72,14 @@ public function store(Request \)
         $p->precio = $data['precio'];
         $p->activo = (bool)$data['activo'];
         $p->categoria_id = $data['categoria_id'] ?? null;
+        $p->image_source = $data['image_source'] ?? 'auto';
+        $p->use_auto_image = ($data['image_source'] ?? 'auto') === 'auto';
+        $p->is_featured = $request->boolean('is_featured');
         $p->save();
 
-        // Optional: seed stock if your inventario module uses it (handled elsewhere)
+        // Handle image upload
+        $this->handleImageUpload($request, $p, $empresaId);
+
         return redirect()->route('admin.productos.index')->with('ok', 'Producto creado');
     }
 
@@ -99,12 +103,16 @@ public function store(Request \)
             'precio' => ['required','numeric','min:0'],
             'categoria_id' => ['nullable','integer', 'exists:categorias,id'],
             'activo' => ['required','boolean'],
+            'imagen' => ['nullable','image','max:2048'],
+            'imagen_url' => ['nullable','url'],
+            'image_source' => ['nullable','in:manual,auto,default'],
+            'is_featured' => ['nullable','boolean'],
         ]);
 
         if (!empty($data['categoria_id'])) {
             $cat = Categoria::where('id', $data['categoria_id'])->where('empresa_id', $empresaId)->first();
             if (!$cat) {
-                return back()->withErrors(['categoria_id' => 'La categoría no pertenece a la empresa actual.'])->withInput();
+                return back()->withErrors(['categoria_id' => 'La categoria no pertenece a la empresa actual.'])->withInput();
             }
         }
 
@@ -114,9 +122,42 @@ public function store(Request \)
         $producto->precio = $data['precio'];
         $producto->activo = (bool)$data['activo'];
         $producto->categoria_id = $data['categoria_id'] ?? null;
+        $producto->image_source = $data['image_source'] ?? $producto->image_source ?? 'auto';
+        $producto->use_auto_image = ($data['image_source'] ?? 'auto') === 'auto';
+        $producto->is_featured = $request->boolean('is_featured');
         $producto->save();
 
+        // Handle image upload
+        $this->handleImageUpload($request, $producto, $empresaId);
+
+        // Clear image cache
+        $this->imageService->clearCache($producto->id);
+
         return redirect()->route('admin.productos.index')->with('ok', 'Producto actualizado');
+    }
+
+    /**
+     * Handle image upload for a product
+     */
+    protected function handleImageUpload(Request $request, Producto $producto, int $empresaId): void
+    {
+        // Priority: uploaded file > URL > existing
+        if ($request->hasFile('imagen')) {
+            $imagePath = $this->imageService->uploadImage(
+                $request->file('imagen'),
+                $empresaId,
+                $producto->id
+            );
+            $producto->imagen_url = $imagePath;
+            $producto->image_source = 'manual';
+            $producto->use_auto_image = false;
+            $producto->save();
+        } elseif ($request->filled('imagen_url') && $request->input('image_source') === 'manual') {
+            $producto->imagen_url = $request->input('imagen_url');
+            $producto->image_source = 'manual';
+            $producto->use_auto_image = false;
+            $producto->save();
+        }
     }
 
     public function destroy(int $id)
@@ -126,5 +167,18 @@ public function store(Request \)
         $producto->delete();
 
         return redirect()->route('admin.productos.index')->with('ok', 'Producto eliminado');
+    }
+
+    /**
+     * Toggle featured status
+     */
+    public function toggleFeatured(int $id)
+    {
+        $empresaId = session('empresa_id');
+        $producto = Producto::where('empresa_id', $empresaId)->findOrFail($id);
+        $producto->is_featured = !$producto->is_featured;
+        $producto->save();
+
+        return back()->with('ok', $producto->is_featured ? 'Producto marcado como destacado' : 'Producto ya no es destacado');
     }
 }

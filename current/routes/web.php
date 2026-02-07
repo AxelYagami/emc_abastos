@@ -23,8 +23,11 @@ use App\Http\Controllers\Operaciones\OpsHubController;
 use App\Http\Controllers\Operaciones\WhatsAppRetryController;
 use App\Http\Controllers\Webhooks\MercadoPagoController;
 use App\Http\Controllers\AI\HelpController;
+use App\Http\Controllers\Admin\PortalConfigController;
+use App\Http\Controllers\Admin\StoreDomainsController;
+use App\Http\Controllers\Admin\StorePromotionsController;
 
-// Storefront
+// Storefront (main domain)
 Route::get('/', [StoreController::class, 'index'])->name('store.home');
 Route::get('/producto/{producto}', [StoreController::class, 'show'])->name('store.producto');
 
@@ -50,6 +53,7 @@ Route::get('/gracias/{folio}', [StoreController::class, 'thanks'])->name('store.
 // Auth
 Route::get('/login', [LoginController::class, 'show'])->name('login');
 Route::post('/login', [LoginController::class, 'login'])->name('login.post');
+Route::post('/login/empresas', [LoginController::class, 'getEmpresas'])->name('login.empresas');
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 
 // Registration
@@ -66,6 +70,16 @@ Route::post('/password/reset', [PasswordResetController::class, 'reset'])->name(
 // Empresa Switch
 Route::get('/empresa', [HomeController::class, 'empresa'])->name('empresa.switch');
 Route::post('/empresa', [HomeController::class, 'empresaSet'])->name('empresa.set');
+
+// Storefront by Handle (fallback URL: /t/{handle})
+Route::prefix('t/{handle}')->middleware('store.resolve')->group(function () {
+    Route::get('/', [StoreController::class, 'index'])->name('store.handle.home');
+    Route::get('/producto/{producto}', [StoreController::class, 'show'])->name('store.handle.producto');
+    Route::get('/carrito', [CartController::class, 'index'])->name('store.handle.cart');
+    Route::post('/carrito/agregar', [CartController::class, 'add'])->name('store.handle.cart.add');
+    Route::get('/checkout', [CheckoutController::class, 'show'])->name('store.handle.checkout');
+    Route::post('/checkout', [CheckoutController::class, 'place'])->name('store.handle.checkout.place');
+});
 
 // Webhooks (no auth required)
 Route::post('/webhooks/mercadopago', [MercadoPagoController::class, 'handle'])->name('webhooks.mercadopago');
@@ -95,16 +109,30 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'empresa', 'role:adm
 
     // Superadmin only routes
     Route::middleware('role:superadmin')->group(function () {
+        // Portal Config
+        Route::get('portal', [PortalConfigController::class, 'index'])->name('portal.config');
+        Route::post('portal', [PortalConfigController::class, 'update'])->name('portal.config.update');
+
         // Empresas CRUD
-        Route::resource('empresas', EmpresasController::class);
+        Route::resource('empresas', EmpresasController::class)->except(['show']);
+
+        // Store Domains
+        Route::get('empresas/{empresa}/domains', [StoreDomainsController::class, 'index'])->name('empresas.domains');
+        Route::post('empresas/{empresa}/domains', [StoreDomainsController::class, 'store'])->name('empresas.domains.store');
+        Route::put('empresas/{empresa}/domains/{domain}', [StoreDomainsController::class, 'update'])->name('empresas.domains.update');
+        Route::delete('empresas/{empresa}/domains/{domain}', [StoreDomainsController::class, 'destroy'])->name('empresas.domains.destroy');
 
         // Temas/Plantillas CRUD
-        Route::resource('temas', TemasController::class);
+        Route::resource('temas', TemasController::class)->except(['show']);
         Route::get('temas/{id}/preview', [TemasController::class, 'preview'])->name('temas.preview');
     });
 
+    // Promotions (admin can manage their store's promos)
+    Route::resource('promotions', StorePromotionsController::class)->except(['show']);
+    Route::post('promotions/{promotion}/toggle', [StorePromotionsController::class, 'toggle'])->name('promotions.toggle');
+
     // Usuarios CRUD
-    Route::resource('usuarios', UsuariosController::class);
+    Route::resource('usuarios', UsuariosController::class)->except(['show']);
     Route::post('usuarios/{id}/reset-password', [UsuariosController::class, 'resetPassword'])->name('usuarios.resetPassword');
     Route::post('usuarios/{id}/toggle', [UsuariosController::class, 'toggle'])->name('usuarios.toggle');
 
@@ -113,8 +141,9 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'empresa', 'role:adm
     Route::get('pagos/{id}', [PagosController::class, 'show'])->name('pagos.show');
     Route::post('pagos/{id}/refresh', [PagosController::class, 'refresh'])->name('pagos.refresh');
 
-    Route::resource('productos', ProductosController::class);
-    Route::resource('categorias', CategoriasController::class);
+    Route::resource('productos', ProductosController::class)->except(['show']);
+    Route::post('productos/{id}/toggle-featured', [ProductosController::class, 'toggleFeatured'])->name('productos.toggleFeatured');
+    Route::resource('categorias', CategoriasController::class)->except(['show']);
 
     // Caja
     Route::get('caja', [CajaController::class, 'index'])->name('caja.index');
@@ -124,13 +153,14 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'empresa', 'role:adm
     Route::get('caja/{turno}', [CajaController::class, 'turno'])->name('caja.turno');
     Route::post('caja/{turno}/movimiento', [CajaController::class, 'movimiento'])->name('caja.movimiento');
 
-    Route::resource('whatsapp', WhatsAppController::class);
-    Route::resource('inventarios', InventariosController::class);
+    Route::resource('whatsapp', WhatsAppController::class)->only(['index', 'create', 'store', 'destroy']);
+    Route::post('whatsapp/{id}/toggle', [WhatsAppController::class, 'toggle'])->name('whatsapp.toggle');
+    Route::get('inventarios', [InventariosController::class, 'index'])->name('inventarios.index');
     Route::get('inventarios/{productoId}/kardex', [InventariosController::class, 'kardex'])->name('inventarios.kardex');
     Route::post('inventarios/{productoId}/ajustar', [InventariosController::class, 'ajustar'])->name('inventarios.ajustar');
-    Route::resource('clientes', ClientesController::class);
+    Route::resource('clientes', ClientesController::class)->except(['show']);
     Route::post('clientes/{id}/toggle', [ClientesController::class, 'toggle'])->name('clientes.toggle');
-    Route::resource('flyers', \App\Http\Controllers\Admin\FlyersController::class);
+    Route::resource('flyers', \App\Http\Controllers\Admin\FlyersController::class)->except(['show']);
     Route::post('flyers/reorder', [\App\Http\Controllers\Admin\FlyersController::class, 'reorder'])->name('flyers.reorder');
 
     // AI Help Assistant

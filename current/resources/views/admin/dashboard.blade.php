@@ -77,6 +77,54 @@
     </div>
   </div>
 
+  <!-- Alerts Section -->
+  @if(isset($alerts) && $alerts['total_alerts'] > 0)
+  <div class="bg-white rounded-xl shadow-sm border p-4 mb-6">
+    <div class="flex items-center justify-between mb-3">
+      <h2 class="text-sm font-bold text-gray-700 flex items-center gap-2">
+        <svg class="w-5 h-5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+        </svg>
+        Alertas del sistema
+      </h2>
+      <span class="px-2.5 py-1 text-xs font-bold rounded-full {{ $alerts['critical'] > 0 ? 'bg-red-100 text-red-700' : ($alerts['warning'] > 0 ? 'bg-amber-100 text-amber-700' : 'bg-green-100 text-green-700') }}">
+        {{ $alerts['total_alerts'] }} alerta{{ $alerts['total_alerts'] != 1 ? 's' : '' }}
+      </span>
+    </div>
+    <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
+      @foreach($alerts['alerts'] as $alert)
+        @if($alert['count'] > 0)
+        <a href="{{ route($alert['route']) }}" class="flex items-center gap-3 p-3 rounded-lg border transition
+          {{ $alert['level'] === 'critical' ? 'border-red-200 bg-red-50 hover:bg-red-100' :
+             ($alert['level'] === 'warning' ? 'border-amber-200 bg-amber-50 hover:bg-amber-100' : 'border-gray-200 hover:bg-gray-50') }}">
+          <div class="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0
+            {{ $alert['level'] === 'critical' ? 'bg-red-200 text-red-700' :
+               ($alert['level'] === 'warning' ? 'bg-amber-200 text-amber-700' : 'bg-gray-200 text-gray-600') }}">
+            @if($alert['icon'] === 'package')
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+            @elseif($alert['icon'] === 'shopping-cart')
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+            @elseif($alert['icon'] === 'truck')
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0"/></svg>
+            @elseif($alert['icon'] === 'dollar-sign')
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            @endif
+          </div>
+          <div class="min-w-0">
+            <p class="font-bold text-sm {{ $alert['level'] === 'critical' ? 'text-red-800' : ($alert['level'] === 'warning' ? 'text-amber-800' : 'text-gray-800') }}">
+              {{ $alert['count'] }}
+            </p>
+            <p class="text-xs truncate {{ $alert['level'] === 'critical' ? 'text-red-600' : ($alert['level'] === 'warning' ? 'text-amber-600' : 'text-gray-500') }}">
+              {{ $alert['title'] }}
+            </p>
+          </div>
+        </a>
+        @endif
+      @endforeach
+    </div>
+  </div>
+  @endif
+
   <!-- Secondary KPI Cards -->
   <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
     <!-- Pendientes -->

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Orden;
 use App\Models\Producto;
 use App\Models\Cliente;
+use App\Services\DashboardAlertService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
@@ -14,6 +15,9 @@ class DashboardController extends Controller
 {
     public function index(Request $request)
     {
+        // Get alerts
+        $alertService = new DashboardAlertService((int) $request->session()->get('empresa_id'));
+        $alerts = $alertService->getSummary();
         $empresaId = (int) $request->session()->get('empresa_id');
 
         // Date ranges
@@ -72,7 +76,7 @@ class DashboardController extends Controller
             'clientes' => $clientes,
         ];
 
-        return view('admin.dashboard', compact('kpis', 'ultimasOrdenes', 'chartData'));
+        return view('admin.dashboard', compact('kpis', 'ultimasOrdenes', 'chartData', 'alerts'));
     }
 
     public function chartData(Request $request)

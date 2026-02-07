@@ -15,3 +15,8 @@ Thumbs.db
 .idea
 .vscode
 *.zip
+
+# ignore windows device file
+NUL
+current/NUL
+

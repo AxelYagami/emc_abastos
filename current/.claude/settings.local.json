@@ -11,7 +11,29 @@
       "Bash(composer dump-autoload:*)",
       "Bash(php -l:*)",
       "Bash(C:/php/php.exe:*)",
-      "Bash(taskkill:*)"
+      "Bash(taskkill:*)",
+      "Bash(php -r:*)",
+      "Bash(npm install:*)",
+      "Bash(npm run build:*)",
+      "Bash(curl:*)",
+      "Bash(grep:*)",
+      "Bash(C:phpphp.exe C:sitesemc_abastoscurrentartisan route:list --path=admin)",
+      "Bash(powershell:*)",
+      "Bash(\"C:\\\\php\\\\php.exe\" artisan route:list --name=promotions)",
+      "Bash(\"C:\\\\php\\\\php.exe\" artisan cache:clear)",
+      "Bash(\"C:\\\\php\\\\php.exe\" artisan config:clear:*)",
+      "Bash(\"C:\\\\php\\\\php.exe\" artisan route:clear:*)",
+      "Bash(\"C:\\\\php\\\\php.exe\" artisan view:clear)",
+      "Bash(dir:*)",
+      "Bash(\"C:\\\\php\\\\php.exe\" artisan view:cache)",
+      "Bash(attrib:*)",
+      "Bash(net stop:*)",
+      "Bash(del:*)",
+      "Bash(C:\\\\php\\\\php.exe artisan migrate:*)",
+      "Bash(/c/php/php.exe artisan migrate:*)",
+      "Bash(/c/php/php.exe artisan:*)",
+      "Bash(/c/php/php.exe -i)",
+      "Bash(iisreset:*)"
     ]
   }
 }

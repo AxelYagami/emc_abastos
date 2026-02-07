@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\Empresa;
 use App\Models\Usuario;
 use App\Models\Rol;
 use Illuminate\Http\Request;
@@ -16,7 +17,12 @@ class RegisterController extends Controller
 {
     public function show()
     {
-        return view('auth.register');
+        // Get all active empresas for selection
+        $empresas = Empresa::where('activa', true)
+            ->orderBy('nombre')
+            ->get(['id', 'nombre', 'handle', 'logo_url']);
+
+        return view('auth.register', compact('empresas'));
     }
 
     public function register(Request $request)
@@ -34,6 +40,8 @@ class RegisterController extends Controller
             'email' => 'required|email|unique:usuarios,email',
             'password' => ['required', 'confirmed', Password::min(8)->mixedCase()->numbers()],
             'whatsapp' => 'nullable|string|max:20',
+            'empresas' => 'nullable|array',
+            'empresas.*' => 'exists:empresas,id',
         ]);
 
         $usuario = Usuario::create([
@@ -44,27 +52,28 @@ class RegisterController extends Controller
             'activo' => true,
         ]);
 
-        // If there's a selected empresa in session, assign as cliente role
-        $empresaId = $request->session()->get('empresa_id');
-        if ($empresaId) {
-            $clienteRol = Rol::where('slug', 'cliente')->first();
-            if (!$clienteRol) {
-                // Create cliente role if doesn't exist
-                $clienteRol = Rol::create([
-                    'nombre' => 'Cliente',
-                    'slug' => 'cliente',
-                    'descripcion' => 'Cliente de la tienda',
+        // Get selected empresas (from form or session)
+        $empresaIds = $data['empresas'] ?? [];
+        $sessionEmpresaId = $request->session()->get('empresa_id');
+
+        if (empty($empresaIds) && $sessionEmpresaId) {
+            $empresaIds = [$sessionEmpresaId];
+        }
+
+        // Associate user with selected empresas
+        if (!empty($empresaIds)) {
+            foreach ($empresaIds as $empresaId) {
+                DB::table('empresa_usuario')->insert([
+                    'empresa_id' => $empresaId,
+                    'usuario_id' => $usuario->id,
+                    'role' => 'cliente',
+                    'created_at' => now(),
+                    'updated_at' => now(),
                 ]);
             }
 
-            DB::table('empresa_usuario')->insert([
-                'empresa_id' => $empresaId,
-                'usuario_id' => $usuario->id,
-                'rol_id' => $clienteRol->id,
-                'activo' => true,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
+            // Set first empresa as active
+            $request->session()->put('empresa_id', $empresaIds[0]);
         }
 
         Auth::login($usuario);

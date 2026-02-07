@@ -15,16 +15,26 @@ class Empresa extends Model
         'brand_nombre_publico',
         'brand_color',
         'logo_path',
+        'logo_url',
         'skin',
         'config',
         'settings',
         'theme_id',
+        'public_id',
+        'handle',
+        'primary_domain',
+        'description',
+        'tags',
+        'sort_order',
+        'is_featured',
     ];
 
     protected $casts = [
         'config' => 'array',
         'settings' => 'array',
+        'tags' => 'array',
         'activa' => 'boolean',
+        'is_featured' => 'boolean',
     ];
 
     // Relationships
@@ -58,6 +68,72 @@ class Empresa extends Model
     public function theme()
     {
         return $this->belongsTo(Theme::class);
+    }
+
+    public function domains()
+    {
+        return $this->hasMany(StoreDomain::class, 'empresa_id');
+    }
+
+    public function promotions()
+    {
+        return $this->hasMany(StorePromotion::class, 'empresa_id');
+    }
+
+    // Multi-store helpers
+    public static function findByHandle(string $handle): ?self
+    {
+        return self::where('handle', $handle)->where('activa', true)->first();
+    }
+
+    public static function findByDomain(string $domain): ?self
+    {
+        $storeDomain = StoreDomain::findByDomain($domain);
+        return $storeDomain?->empresa;
+    }
+
+    public static function resolveStore(?string $domain = null, ?string $handle = null): ?self
+    {
+        if ($domain) {
+            $store = self::findByDomain($domain);
+            if ($store) return $store;
+        }
+
+        if ($handle) {
+            return self::findByHandle($handle);
+        }
+
+        return null;
+    }
+
+    public function generateHandle(): string
+    {
+        if (!$this->public_id) {
+            $this->public_id = self::generatePublicId();
+        }
+        return \Str::slug($this->nombre) . '-' . $this->public_id;
+    }
+
+    public static function generatePublicId(): string
+    {
+        do {
+            $id = strtolower(\Str::random(8));
+        } while (self::where('public_id', $id)->exists());
+        return $id;
+    }
+
+    public function getStoreUrlAttribute(): string
+    {
+        if ($this->primary_domain) {
+            return "https://{$this->primary_domain}";
+        }
+        $fallback = PortalConfig::get('fallback_domain', 'tiendas.emc.mx');
+        return "https://{$fallback}/t/{$this->handle}";
+    }
+
+    public function getDisplayLogoAttribute(): ?string
+    {
+        return $this->logo_url ?? $this->getLogoUrl();
     }
 
     // Settings helpers

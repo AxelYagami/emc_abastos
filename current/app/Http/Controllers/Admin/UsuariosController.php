@@ -6,9 +6,11 @@ use App\Http\Controllers\Controller;
 use App\Models\Usuario;
 use App\Models\Empresa;
 use App\Models\Rol;
+use App\Services\WhatsAppCredentialService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 class UsuariosController extends Controller
 {
@@ -44,25 +46,30 @@ class UsuariosController extends Controller
         $data = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:usuarios,email',
-            'password' => 'required|string|min:8|confirmed',
+            'password' => 'nullable|string|min:8|confirmed',
             'whatsapp' => 'nullable|string|max:20',
             'telefono' => 'nullable|string|max:20',
             'activo' => 'boolean',
             'empresas' => 'array',
             'empresas.*.empresa_id' => 'required|exists:empresas,id',
             'empresas.*.rol_id' => 'required|exists:roles,id',
+            'send_whatsapp' => 'boolean',
         ]);
+
+        // Generate password if not provided
+        $plainPassword = $data['password'] ?? Str::random(10);
 
         $usuario = Usuario::create([
             'name' => $data['name'],
             'email' => $data['email'],
-            'password' => Hash::make($data['password']),
+            'password' => Hash::make($plainPassword),
             'whatsapp' => $data['whatsapp'] ?? null,
             'telefono' => $data['telefono'] ?? null,
             'activo' => $data['activo'] ?? true,
         ]);
 
         // Assign to empresas
+        $firstEmpresa = null;
         if (!empty($data['empresas'])) {
             foreach ($data['empresas'] as $assignment) {
                 DB::table('empresa_usuario')->insert([
@@ -73,10 +80,31 @@ class UsuariosController extends Controller
                     'created_at' => now(),
                     'updated_at' => now(),
                 ]);
+
+                if (!$firstEmpresa) {
+                    $firstEmpresa = Empresa::find($assignment['empresa_id']);
+                }
             }
         }
 
-        return redirect()->route('admin.usuarios.index')->with('ok', 'Usuario creado correctamente');
+        // Send WhatsApp credentials if requested
+        $whatsappSent = false;
+        if ($request->boolean('send_whatsapp')) {
+            try {
+                $whatsappService = new WhatsAppCredentialService();
+                $whatsappSent = $whatsappService->sendCredentials($usuario, $plainPassword, $firstEmpresa);
+            } catch (\Exception $e) {
+                // Log but don't fail
+                \Log::warning('Failed to send WhatsApp credentials', ['error' => $e->getMessage()]);
+            }
+        }
+
+        $message = 'Usuario creado correctamente';
+        if ($request->boolean('send_whatsapp')) {
+            $message .= $whatsappSent ? ' y credenciales enviadas por WhatsApp' : ' (error al enviar WhatsApp)';
+        }
+
+        return redirect()->route('admin.usuarios.index')->with('ok', $message);
     }
 
     public function edit(int $id)
@@ -163,14 +191,40 @@ class UsuariosController extends Controller
         $usuario = Usuario::findOrFail($id);
 
         $data = $request->validate([
-            'password' => 'required|string|min:8|confirmed',
+            'password' => 'nullable|string|min:8|confirmed',
+            'send_whatsapp' => 'boolean',
         ]);
+
+        // Generate password if not provided
+        $plainPassword = $data['password'] ?? Str::random(10);
 
         $usuario->update([
-            'password' => Hash::make($data['password']),
+            'password' => Hash::make($plainPassword),
         ]);
 
-        return back()->with('ok', 'Contraseña actualizada correctamente');
+        // Send WhatsApp if requested
+        $whatsappSent = false;
+        if ($request->boolean('send_whatsapp')) {
+            try {
+                // Get first empresa for context
+                $empresaId = DB::table('empresa_usuario')
+                    ->where('usuario_id', $id)
+                    ->value('empresa_id');
+                $empresa = $empresaId ? Empresa::find($empresaId) : null;
+
+                $whatsappService = new WhatsAppCredentialService();
+                $whatsappSent = $whatsappService->sendPasswordReset($usuario, $plainPassword, $empresa);
+            } catch (\Exception $e) {
+                \Log::warning('Failed to send WhatsApp password reset', ['error' => $e->getMessage()]);
+            }
+        }
+
+        $message = 'Contrasena actualizada correctamente';
+        if ($request->boolean('send_whatsapp')) {
+            $message .= $whatsappSent ? ' y enviada por WhatsApp' : ' (error al enviar WhatsApp)';
+        }
+
+        return back()->with('ok', $message);
     }
 
     public function toggle(int $id)

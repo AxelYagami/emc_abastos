@@ -33,6 +33,8 @@ class EmpresasController extends Controller
             'activa' => 'boolean',
             'theme_id' => 'nullable|exists:themes,id',
             'logo' => 'nullable|image|max:2048',
+            'descripcion' => 'nullable|string|max:500',
+            'tags' => 'nullable|string|max:200',
             // Settings
             'app_name' => 'nullable|string|max:200',
             'primary_color' => 'nullable|string|max:20',
@@ -45,6 +47,13 @@ class EmpresasController extends Controller
         ]);
 
         $slug = $data['slug'] ?? Str::slug($data['nombre']);
+
+        // Generate unique handle for portal (8 random chars)
+        $handle = $this->generateUniqueHandle($slug);
+
+        // Generate public_id (8 random chars)
+        $publicId = Str::random(8);
+
         $logoPath = null;
 
         if ($request->hasFile('logo')) {
@@ -62,15 +71,26 @@ class EmpresasController extends Controller
             'default_product_image_url' => $data['default_product_image_url'] ?? null,
         ];
 
+        // Parse tags from comma-separated string
+        $tags = [];
+        if (!empty($data['tags'])) {
+            $tags = array_map('trim', explode(',', $data['tags']));
+            $tags = array_filter($tags);
+        }
+
         Empresa::create([
             'nombre' => $data['nombre'],
             'slug' => $slug,
+            'handle' => $handle,
+            'public_id' => $publicId,
             'brand_nombre_publico' => $data['brand_nombre_publico'] ?? null,
             'brand_color' => $data['brand_color'] ?? null,
             'logo_path' => $logoPath,
             'activa' => $data['activa'] ?? true,
             'theme_id' => $data['theme_id'] ?? null,
             'settings' => array_filter($settings),
+            'descripcion' => $data['descripcion'] ?? null,
+            'tags' => !empty($tags) ? $tags : null,
         ]);
 
         return redirect()->route('admin.empresas.index')->with('ok', 'Empresa creada correctamente');
@@ -90,12 +110,16 @@ class EmpresasController extends Controller
         $data = $request->validate([
             'nombre' => 'required|string|max:160',
             'slug' => 'nullable|string|max:120|unique:empresas,slug,' . $id,
+            'handle' => 'nullable|string|max:120|unique:empresas,handle,' . $id,
             'brand_nombre_publico' => 'nullable|string|max:200',
             'brand_color' => 'nullable|string|max:20',
             'activa' => 'boolean',
             'theme_id' => 'nullable|exists:themes,id',
             'logo' => 'nullable|image|max:2048',
             'remove_logo' => 'boolean',
+            'descripcion' => 'nullable|string|max:500',
+            'tags' => 'nullable|string|max:200',
+            'is_featured' => 'boolean',
             // Settings
             'app_name' => 'nullable|string|max:200',
             'primary_color' => 'nullable|string|max:20',
@@ -131,15 +155,39 @@ class EmpresasController extends Controller
             'default_product_image_url' => $data['default_product_image_url'] ?? null,
         ]);
 
+        // Parse tags from comma-separated string
+        $tags = [];
+        if (!empty($data['tags'])) {
+            $tags = array_map('trim', explode(',', $data['tags']));
+            $tags = array_filter($tags);
+        }
+
+        // Generate handle if not exists
+        $handle = $data['handle'] ?? $empresa->handle;
+        if (empty($handle)) {
+            $handle = $this->generateUniqueHandle($data['slug'] ?? $empresa->slug ?? Str::slug($data['nombre']));
+        }
+
+        // Generate public_id if not exists
+        $publicId = $empresa->public_id;
+        if (empty($publicId)) {
+            $publicId = Str::random(8);
+        }
+
         $empresa->update([
             'nombre' => $data['nombre'],
             'slug' => $data['slug'] ?? $empresa->slug,
+            'handle' => $handle,
+            'public_id' => $publicId,
             'brand_nombre_publico' => $data['brand_nombre_publico'] ?? null,
             'brand_color' => $data['brand_color'] ?? null,
             'logo_path' => $logoPath,
             'activa' => $data['activa'] ?? true,
             'theme_id' => $data['theme_id'] ?? null,
             'settings' => array_filter($settings),
+            'descripcion' => $data['descripcion'] ?? null,
+            'tags' => !empty($tags) ? $tags : null,
+            'is_featured' => $request->boolean('is_featured'),
         ]);
 
         return redirect()->route('admin.empresas.index')->with('ok', 'Empresa actualizada correctamente');
@@ -161,5 +209,22 @@ class EmpresasController extends Controller
         $empresa->delete();
 
         return redirect()->route('admin.empresas.index')->with('ok', 'Empresa eliminada correctamente');
+    }
+
+    /**
+     * Generate a unique handle for the empresa
+     */
+    private function generateUniqueHandle(string $baseSlug): string
+    {
+        $handle = Str::slug($baseSlug);
+        $suffix = '';
+        $counter = 1;
+
+        while (Empresa::where('handle', $handle . $suffix)->exists()) {
+            $suffix = '-' . $counter;
+            $counter++;
+        }
+
+        return $handle . $suffix;
     }
 }

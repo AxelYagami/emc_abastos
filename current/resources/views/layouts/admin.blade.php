@@ -4,6 +4,24 @@
     $appName = $empresa ? $empresa->getAppName() : 'Mercado De Abastos';
     $logoUrl = $empresa ? $empresa->getLogoUrl() : asset('storage/brand/logo-iados.png');
     $isSuperAdmin = auth()->user()?->isSuperAdmin() ?? false;
+
+    // Get user's empresas for switcher
+    $userEmpresas = collect();
+    if (auth()->check()) {
+        if ($isSuperAdmin) {
+            $userEmpresas = \App\Models\Empresa::where('activa', true)->orderBy('nombre')->get();
+        } else {
+            $userEmpresas = auth()->user()->empresas()
+                ->where('empresas.activa', true)
+                ->wherePivot('activo', true)
+                ->orderBy('empresas.nombre')
+                ->get();
+        }
+    }
+    // Debug: si no hay empresas, usar la empresa actual de sesión
+    if ($userEmpresas->isEmpty() && $empresa) {
+        $userEmpresas = collect([$empresa]);
+    }
 @endphp
 <!doctype html>
 <html lang="es">
@@ -30,13 +48,13 @@
     <style>[x-cloak] { display: none !important; }</style>
 </head>
 <body class="min-h-screen bg-gray-50">
-    <div class="flex min-h-screen" x-data="{ sidebarOpen: true, mobileMenuOpen: false }">
+    <div class="flex min-h-screen" x-data="{ sidebarOpen: true, mobileMenuOpen: false, empresaSwitcher: false }">
         <!-- Mobile sidebar overlay -->
         <div x-show="mobileMenuOpen" x-cloak @click="mobileMenuOpen = false"
              class="fixed inset-0 bg-black/50 z-40 lg:hidden"></div>
 
-        <!-- Sidebar -->
-        <aside class="fixed lg:static inset-y-0 left-0 z-50 w-64 bg-gradient-to-b from-primary-800 to-primary-900 text-white flex-shrink-0 transition-all duration-300 transform"
+        <!-- Sidebar - Always visible, never disappears -->
+        <aside class="fixed lg:static inset-y-0 left-0 z-50 w-64 bg-gradient-to-b from-primary-800 to-primary-900 text-white flex-shrink-0 transition-all duration-300 transform flex flex-col"
                :class="{ 'lg:w-64': sidebarOpen, 'lg:w-20': !sidebarOpen, '-translate-x-full lg:translate-x-0': !mobileMenuOpen }">
             <div class="p-4 border-b border-primary-700/50">
                 <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-3">
@@ -54,7 +72,7 @@
                 <div class="text-xs text-primary-200 mt-2 truncate" x-show="sidebarOpen">{{ session('empresa_nombre') ?? '—' }}</div>
             </div>
 
-            <nav class="p-3 space-y-1 text-sm overflow-y-auto" style="max-height: calc(100vh - 180px);">
+            <nav class="p-3 space-y-1 text-sm overflow-y-auto flex-1">
                 <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition {{ request()->routeIs('admin.dashboard') ? 'bg-white/20 text-white' : 'text-primary-100 hover:bg-white/10' }}">
                     <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
@@ -129,7 +147,21 @@
                     </svg>
                     <span x-show="sidebarOpen">Temas</span>
                 </a>
+
+                <a href="{{ route('admin.portal.config') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition {{ request()->routeIs('admin.portal.*') ? 'bg-white/20 text-white' : 'text-primary-100 hover:bg-white/10' }}">
+                    <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/>
+                    </svg>
+                    <span x-show="sidebarOpen">Portal Central</span>
+                </a>
                 @endif
+
+                <a href="{{ route('admin.promotions.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition {{ request()->routeIs('admin.promotions.*') ? 'bg-white/20 text-white' : 'text-primary-100 hover:bg-white/10' }}">
+                    <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/>
+                    </svg>
+                    <span x-show="sidebarOpen">Promociones</span>
+                </a>
 
                 <div class="border-t border-primary-700/50 my-3"></div>
 
@@ -156,12 +188,44 @@
                     <span x-show="sidebarOpen">Asistente IA</span>
                 </a>
 
-                <a href="{{ route('store.home') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition text-primary-200 hover:bg-white/10">
-                    <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
-                    </svg>
-                    <span x-show="sidebarOpen">Ver tienda</span>
-                </a>
+                <!-- Ver Tienda -->
+                @if($userEmpresas->count() > 1)
+                    {{-- Multiple tiendas: show dropdown --}}
+                    <div class="relative" x-data="{ showTiendas: false }">
+                        <button @click="showTiendas = !showTiendas" type="button"
+                                class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition text-primary-200 hover:bg-white/10 hover:text-white">
+                            <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+                            </svg>
+                            <span x-show="sidebarOpen" class="flex-1 text-left">Ver tienda</span>
+                            <span x-show="sidebarOpen" class="text-xs bg-white/20 px-1.5 py-0.5 rounded">{{ $userEmpresas->count() }}</span>
+                        </button>
+                        <div x-show="showTiendas" x-cloak
+                             @click.outside="showTiendas = false"
+                             class="absolute left-0 right-0 mt-1 bg-primary-950 border border-primary-700 rounded-lg shadow-lg z-50 overflow-hidden">
+                            @foreach($userEmpresas as $t)
+                                <a href="/t/{{ $t->handle ?? $t->slug }}"
+                                   target="_blank"
+                                   class="block px-4 py-2.5 text-sm text-primary-100 hover:bg-primary-800 hover:text-white border-b border-primary-800 last:border-0">
+                                    {{ $t->nombre }}
+                                </a>
+                            @endforeach
+                        </div>
+                    </div>
+                @else
+                    {{-- Single or no tienda: direct link --}}
+                    @php
+                        $singleTienda = $userEmpresas->first();
+                        $tiendaHref = $singleTienda && $singleTienda->handle ? '/t/' . $singleTienda->handle : '/';
+                    @endphp
+                    <a href="{{ $tiendaHref }}" target="_blank"
+                       class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition text-primary-200 hover:bg-white/10 hover:text-white">
+                        <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+                        </svg>
+                        <span x-show="sidebarOpen">Ver tienda</span>
+                    </a>
+                @endif
             </nav>
 
             <div class="p-3 mt-auto border-t border-primary-700/50">
@@ -186,12 +250,48 @@
                     <h1 class="text-lg lg:text-xl font-bold text-gray-800">{{ $header ?? $title ?? 'Admin' }}</h1>
                 </div>
                 <div class="flex items-center gap-4">
-                    <a href="{{ route('empresa.switch') }}" class="hidden sm:flex text-sm text-gray-600 hover:text-primary-600 transition items-center gap-1">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/>
-                        </svg>
-                        Cambiar empresa
-                    </a>
+                    <!-- Inline Empresa Switcher -->
+                    @if($userEmpresas->count() > 1)
+                        <div class="relative" x-data="{ open: false }">
+                            <button @click="open = !open" class="hidden sm:flex items-center gap-2 text-sm text-gray-600 hover:text-primary-600 transition px-3 py-2 rounded-lg hover:bg-gray-50">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/>
+                                </svg>
+                                <span class="max-w-32 truncate">{{ session('empresa_nombre') ?? 'Empresa' }}</span>
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                                </svg>
+                            </button>
+                            <div x-show="open" x-cloak @click.away="open = false"
+                                 class="absolute right-0 mt-2 w-64 bg-white border rounded-xl shadow-lg py-2 z-50">
+                                <div class="px-4 py-2 text-xs text-gray-500 border-b">Cambiar empresa</div>
+                                @foreach($userEmpresas as $emp)
+                                    <form method="POST" action="{{ route('empresa.set') }}" class="contents">
+                                        @csrf
+                                        <input type="hidden" name="empresa_id" value="{{ $emp->id }}">
+                                        <button type="submit" class="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 flex items-center gap-2 {{ $emp->id == $empresaId ? 'bg-primary-50 text-primary-700' : 'text-gray-700' }}">
+                                            @if($emp->id == $empresaId)
+                                                <svg class="w-4 h-4 text-primary-600" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                                                </svg>
+                                            @else
+                                                <span class="w-4"></span>
+                                            @endif
+                                            {{ $emp->nombre }}
+                                        </button>
+                                    </form>
+                                @endforeach
+                            </div>
+                        </div>
+                    @elseif($userEmpresas->count() == 1)
+                        <span class="hidden sm:flex text-sm text-gray-500 items-center gap-1">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+                            </svg>
+                            {{ session('empresa_nombre') ?? 'Empresa' }}
+                        </span>
+                    @endif
+
                     <form method="POST" action="{{ route('logout') }}">
                         @csrf
                         <button class="text-sm text-gray-600 hover:text-red-600 transition flex items-center gap-1">
@@ -210,6 +310,12 @@
                     <div class="mb-4 p-4 rounded-lg bg-green-50 border border-green-200 text-green-800 flex items-center gap-2">
                         <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
                         {{ session('ok') }}
+                    </div>
+                @endif
+                @if(session('success'))
+                    <div class="mb-4 p-4 rounded-lg bg-green-50 border border-green-200 text-green-800 flex items-center gap-2">
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+                        {{ session('success') }}
                     </div>
                 @endif
                 @if(session('error'))
