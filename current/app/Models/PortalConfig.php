@@ -31,7 +31,7 @@ class PortalConfig extends Model
         'show_prices_in_portal' => true,
         'primary_color' => '#16a34a',
         'secondary_color' => '#6b7280',
-        'fallback_domain' => 'tiendas.emc.mx',
+        'fallback_domain' => null, // Uses APP_URL by default
         // Flyer settings
         'flyer_enabled' => true,
         'flyer_title' => 'Productos destacados',
@@ -45,6 +45,10 @@ class PortalConfig extends Model
         'ai_assistant_enabled' => true,
         'ai_assistant_title' => 'Asistente IA',
         'ai_assistant_welcome' => 'Hola! Soy tu asistente virtual. Puedo ayudarte a encontrar productos, tiendas y responder tus preguntas.',
+        // Home redirect
+        'home_redirect_path' => 'portal',
+        // Active template
+        'active_template' => 'default',
     ];
 
     public static function get(string $key, $default = null)

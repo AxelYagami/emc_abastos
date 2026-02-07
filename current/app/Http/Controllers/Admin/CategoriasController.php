@@ -3,17 +3,32 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Admin\Traits\AdminContext;
 use App\Models\Categoria;
+use App\Models\Empresa;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
 class CategoriasController extends Controller
 {
+    use AdminContext;
+
     public function index(Request $request)
     {
-        $empresaId = (int) $request->session()->get('empresa_id');
-        $categorias = Categoria::where('empresa_id',$empresaId)->orderByRaw('orden NULLS LAST')->orderBy('id')->get();
-        return view('admin.categorias.index', compact('categorias'));
+        $empresaId = $this->resolveEmpresaId($request);
+
+        $q = Categoria::orderByRaw('orden NULLS LAST')->orderBy('id');
+
+        if ($this->isSuperAdmin() && !$request->filled('empresa_id')) {
+            $q->with('empresa');
+        } else {
+            $q->where('empresa_id', $empresaId);
+        }
+
+        $categorias = $q->get();
+        $empresas = $this->getEmpresasForUser();
+
+        return view('admin.categorias.index', compact('categorias', 'empresas', 'empresaId'));
     }
 
     public function create()
@@ -23,7 +38,7 @@ class CategoriasController extends Controller
 
     public function store(Request $request)
     {
-        $empresaId = (int) $request->session()->get('empresa_id');
+        $empresaId = $this->resolveEmpresaId($request);
 
         $data = $request->validate([
             'nombre'=>'required|string|max:180',
@@ -41,14 +56,14 @@ class CategoriasController extends Controller
 
     public function edit(Request $request, int $id)
     {
-        $empresaId = (int) $request->session()->get('empresa_id');
+        $empresaId = $this->resolveEmpresaId($request);
         $categoria = Categoria::where('empresa_id',$empresaId)->findOrFail($id);
         return view('admin.categorias.edit', compact('categoria'));
     }
 
     public function update(Request $request, int $id)
     {
-        $empresaId = (int) $request->session()->get('empresa_id');
+        $empresaId = $this->resolveEmpresaId($request);
         $categoria = Categoria::where('empresa_id',$empresaId)->findOrFail($id);
 
         $data = $request->validate([
@@ -65,7 +80,7 @@ class CategoriasController extends Controller
 
     public function destroy(Request $request, int $id)
     {
-        $empresaId = (int) $request->session()->get('empresa_id');
+        $empresaId = $this->resolveEmpresaId($request);
         $categoria = Categoria::where('empresa_id',$empresaId)->findOrFail($id);
         $categoria->delete();
         return redirect()->route('admin.categorias.index')->with('ok','Categoría eliminada');

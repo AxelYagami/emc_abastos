@@ -70,7 +70,12 @@ class Usuario extends Authenticatable
 
     public function isSuperAdmin(): bool
     {
-        return \DB::table('empresa_usuario')
+        // Cache per-request to avoid repeated queries
+        if (isset($this->_isSuperAdminCache)) {
+            return $this->_isSuperAdminCache;
+        }
+
+        return $this->_isSuperAdminCache = \DB::table('empresa_usuario')
             ->join('roles', 'empresa_usuario.rol_id', '=', 'roles.id')
             ->where('empresa_usuario.usuario_id', $this->id)
             ->where('roles.slug', 'superadmin')

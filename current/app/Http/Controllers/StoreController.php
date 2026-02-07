@@ -13,10 +13,14 @@ final class StoreController extends Controller
     {
         $q = trim((string) $request->query('q', ''));
         $categoriaId = $request->query('categoria_id');
-        $empresaId = (int) $request->session()->get('empresa_id', 1);
+
+        // Get empresa_id from middleware (request attributes) or session
+        $empresaId = $request->attributes->get('store_id')
+            ?? (int) $request->session()->get('empresa_id', 1);
 
         $productos = Producto::query()
             ->with('categoria')
+            ->where('empresa_id', $empresaId)
             ->when($q !== '', fn($qq) => $qq->where('nombre', 'ilike', "%{$q}%"))
             ->when($categoriaId, fn($qq) => $qq->where('categoria_id', $categoriaId))
             ->where('activo', true)
@@ -24,7 +28,7 @@ final class StoreController extends Controller
             ->paginate(12)
             ->withQueryString();
 
-        $categorias = Categoria::orderBy('nombre')->get();
+        $categorias = Categoria::where('empresa_id', $empresaId)->orderBy('nombre')->get();
 
         // Get active flyers for hero slider
         $flyers = Flyer::where('empresa_id', $empresaId)
@@ -33,7 +37,10 @@ final class StoreController extends Controller
             ->limit(10)
             ->get();
 
-        return view('store.index', compact('productos', 'categorias', 'q', 'categoriaId', 'flyers'));
+        // Get current store for view
+        $currentStore = $request->attributes->get('store');
+
+        return view('store.index', compact('productos', 'categorias', 'q', 'categoriaId', 'flyers', 'currentStore'));
     }
 
     public function show(Producto $producto)

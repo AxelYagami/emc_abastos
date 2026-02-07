@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(php artisan tinker:*)",
+      "Bash(php artisan:*)",
+      "Bash(php -r:*)",
+      "Bash(php -f:*)",
+      "Bash(php:*)",
+      "Bash(chmod:*)",
+      "Bash(icacls:*)",
+      "Bash(cmd //c \"icacls C:\\\\sites\\\\emc_abastos\\\\current\\\\portal\\\\src\\\\components\\\\Header.jsx /grant Users:F\")",
+      "Bash(grep:*)",
+      "Bash(ls \"C:\\\\sites\\\\emc_abastos\\\\current\\\\config\"\" 2>/dev/null || echo \"No config dir \")",
+      "Bash(composer require:*)",
+      "Bash(composer install:*)",
+      "Bash(find:*)",
+      "Bash(MSYS_NO_PATHCONV=1 icacls:*)",
+      "Bash(MSYS_NO_PATHCONV=1 attrib:*)"
+    ]
+  }
+}

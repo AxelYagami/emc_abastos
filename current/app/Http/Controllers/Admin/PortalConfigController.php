@@ -73,6 +73,10 @@ class PortalConfigController extends Controller
             'ai_assistant_enabled' => 'nullable|boolean',
             'ai_assistant_title' => 'nullable|string|max:50',
             'ai_assistant_welcome' => 'nullable|string|max:500',
+            // Home redirect
+            'home_redirect_path' => 'nullable|string|max:100',
+            // Template
+            'active_template' => 'nullable|string|in:default,market_v2',
         ]);
 
         $fields = [
@@ -82,6 +86,7 @@ class PortalConfigController extends Controller
             'primary_color', 'secondary_color', 'fallback_domain',
             'flyer_title', 'flyer_subtitle', 'flyer_accent_color',
             'ai_assistant_title', 'ai_assistant_welcome',
+            'home_redirect_path', 'active_template',
         ];
 
         foreach ($fields as $field) {

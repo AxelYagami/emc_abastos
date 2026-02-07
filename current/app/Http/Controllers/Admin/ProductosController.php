@@ -3,13 +3,17 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Admin\Traits\AdminContext;
 use App\Models\Categoria;
+use App\Models\Empresa;
 use App\Models\Producto;
 use App\Services\ProductImageService;
 use Illuminate\Http\Request;
 
 class ProductosController extends Controller
 {
+    use AdminContext;
+
     protected ProductImageService $imageService;
 
     public function __construct(ProductImageService $imageService)
@@ -19,29 +23,38 @@ class ProductosController extends Controller
 
     public function index(Request $request)
     {
-        $empresaId = session('empresa_id');
+        $empresaId = $this->resolveEmpresaId($request);
         $search = trim($request->get('q', ''));
 
-        $query = Producto::where('empresa_id', $empresaId)->with('categoria');
+        $query = Producto::with('categoria');
+
+        // Superadmin: show all or filter by empresa
+        if ($this->isSuperAdmin() && !$request->filled('empresa_id')) {
+            $query->with('empresa');
+        } else {
+            $query->where('empresa_id', $empresaId);
+        }
 
         if ($search !== '') {
             $query->where('nombre', 'ilike', "%{$search}%");
         }
 
         $productos = $query->orderByDesc('id')->paginate(20)->withQueryString();
-        return view('admin.productos.index', compact('productos', 'search'));
+        $empresas = $this->getEmpresasForUser();
+
+        return view('admin.productos.index', compact('productos', 'search', 'empresas', 'empresaId'));
     }
 
-    public function create()
+    public function create(Request $request)
     {
-        $empresaId = session('empresa_id');
+        $empresaId = $this->resolveEmpresaId($request);
         $categorias = Categoria::where('empresa_id', $empresaId)->orderBy('orden')->orderBy('nombre')->get();
         return view('admin.productos.create', compact('categorias'));
     }
 
     public function store(Request $request)
     {
-        $empresaId = session('empresa_id');
+        $empresaId = $this->resolveEmpresaId($request);
 
         $data = $request->validate([
             'nombre' => ['required','string','max:160'],
@@ -83,9 +96,9 @@ class ProductosController extends Controller
         return redirect()->route('admin.productos.index')->with('ok', 'Producto creado');
     }
 
-    public function edit(int $id)
+    public function edit(Request $request, int $id)
     {
-        $empresaId = session('empresa_id');
+        $empresaId = $this->resolveEmpresaId($request);
         $producto = Producto::where('empresa_id', $empresaId)->findOrFail($id);
         $categorias = Categoria::where('empresa_id', $empresaId)->orderBy('orden')->orderBy('nombre')->get();
         return view('admin.productos.edit', compact('producto', 'categorias'));
@@ -93,7 +106,7 @@ class ProductosController extends Controller
 
     public function update(Request $request, int $id)
     {
-        $empresaId = session('empresa_id');
+        $empresaId = $this->resolveEmpresaId($request);
         $producto = Producto::where('empresa_id', $empresaId)->findOrFail($id);
 
         $data = $request->validate([
@@ -160,9 +173,9 @@ class ProductosController extends Controller
         }
     }
 
-    public function destroy(int $id)
+    public function destroy(Request $request, int $id)
     {
-        $empresaId = session('empresa_id');
+        $empresaId = $this->resolveEmpresaId($request);
         $producto = Producto::where('empresa_id', $empresaId)->findOrFail($id);
         $producto->delete();
 
@@ -172,9 +185,9 @@ class ProductosController extends Controller
     /**
      * Toggle featured status
      */
-    public function toggleFeatured(int $id)
+    public function toggleFeatured(Request $request, int $id)
     {
-        $empresaId = session('empresa_id');
+        $empresaId = $this->resolveEmpresaId($request);
         $producto = Producto::where('empresa_id', $empresaId)->findOrFail($id);
         $producto->is_featured = !$producto->is_featured;
         $producto->save();

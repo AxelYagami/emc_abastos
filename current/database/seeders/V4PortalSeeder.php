@@ -41,7 +41,7 @@ class V4PortalSeeder extends Seeder
             'developer_whatsapp' => '8318989580',
             'primary_color' => '#16a34a',
             'secondary_color' => '#6b7280',
-            'fallback_domain' => 'tiendas.emc.mx',
+            // fallback_domain removed - uses APP_URL by default
             'promos_per_store' => '1',
             'show_prices_in_portal' => '1',
         ];

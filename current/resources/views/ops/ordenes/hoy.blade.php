@@ -1,5 +1,9 @@
-@extends('layouts.ops', ['title'=>'Lista del día'])
+@extends('layouts.admin', ['title'=>'Lista del día', 'header'=>'Lista del día'])
 @section('content')
+<div class="mb-4 p-3 rounded-lg bg-amber-50 border border-amber-200 text-amber-800 text-sm flex items-center justify-between">
+    <span>Modo consulta. Para operar ordenes usa el panel movil.</span>
+    <a href="{{ route('ops.movil') }}" class="px-3 py-1 bg-amber-600 text-white rounded text-xs font-medium hover:bg-amber-700">Ir a Ops Movil</a>
+</div>
 <div class="flex flex-col sm:flex-row gap-2 items-stretch sm:items-center justify-between mb-4">
   <div>
     <div class="text-lg font-bold">Lista del día</div>

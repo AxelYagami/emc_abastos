@@ -11,6 +11,13 @@ class Orden extends Model
 
     protected $casts = [
         'meta' => 'array',
+        'estimated_ready_at' => 'datetime',
+        'confirmed_at' => 'datetime',
+        'preparing_at' => 'datetime',
+        'ready_at' => 'datetime',
+        'en_ruta_at' => 'datetime',
+        'delivered_at' => 'datetime',
+        'cancelled_at' => 'datetime',
     ];
 
     public function items()
@@ -31,6 +38,16 @@ class Orden extends Model
     public function empresa()
     {
         return $this->belongsTo(Empresa::class, 'empresa_id');
+    }
+
+    public function repartidor()
+    {
+        return $this->belongsTo(Usuario::class, 'repartidor_id');
+    }
+
+    public function pushLogs()
+    {
+        return $this->hasMany(PushNotificationLog::class, 'order_id');
     }
 
     public function getTotal(): float

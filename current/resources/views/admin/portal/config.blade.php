@@ -11,6 +11,48 @@
     <form action="{{ route('admin.portal.config.update') }}" method="POST" class="space-y-6">
         @csrf
 
+        <!-- Template Selector -->
+        <div class="bg-white rounded-lg shadow p-6">
+            <h2 class="text-lg font-semibold text-gray-800 mb-4">Template del Portal</h2>
+            <p class="text-sm text-gray-500 mb-4">Selecciona el diseño visual del portal publico. Ambos templates usan la misma configuracion.</p>
+            <div class="grid sm:grid-cols-2 gap-4">
+                <label class="relative cursor-pointer">
+                    <input type="radio" name="active_template" value="default"
+                           {{ ($config['active_template'] ?? 'default') === 'default' ? 'checked' : '' }}
+                           class="peer sr-only">
+                    <div class="border-2 rounded-xl p-4 transition-all peer-checked:border-green-500 peer-checked:bg-green-50 hover:border-gray-300">
+                        <div class="flex items-center gap-3 mb-2">
+                            <div class="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center">
+                                <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z"/></svg>
+                            </div>
+                            <div>
+                                <span class="font-semibold text-gray-800">Default</span>
+                                <span class="ml-2 text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">Clasico</span>
+                            </div>
+                        </div>
+                        <p class="text-sm text-gray-500">Hero con gradiente, secciones verticales, tiendas en grid cuadrado. Limpio y directo.</p>
+                    </div>
+                </label>
+                <label class="relative cursor-pointer">
+                    <input type="radio" name="active_template" value="market_v2"
+                           {{ ($config['active_template'] ?? 'default') === 'market_v2' ? 'checked' : '' }}
+                           class="peer sr-only">
+                    <div class="border-2 rounded-xl p-4 transition-all peer-checked:border-indigo-500 peer-checked:bg-indigo-50 hover:border-gray-300">
+                        <div class="flex items-center gap-3 mb-2">
+                            <div class="w-10 h-10 rounded-lg bg-indigo-100 flex items-center justify-center">
+                                <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+                            </div>
+                            <div>
+                                <span class="font-semibold text-gray-800">Market v2</span>
+                                <span class="ml-2 text-xs bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-full">Premium</span>
+                            </div>
+                        </div>
+                        <p class="text-sm text-gray-500">Diseño tipo marketplace moderno. Hero full-width con imagen, cards glassmorphism, layout magazine.</p>
+                    </div>
+                </label>
+            </div>
+        </div>
+
         <!-- General -->
         <div class="bg-white rounded-lg shadow p-6">
             <h2 class="text-lg font-semibold text-gray-800 mb-4">Informacion General</h2>
@@ -185,6 +227,21 @@
             </div>
         </div>
 
+        <!-- Home Redirect -->
+        <div class="bg-white rounded-lg shadow p-6">
+            <h2 class="text-lg font-semibold text-gray-800 mb-4">Redireccion del Home</h2>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Ruta al entrar a la raiz del sitio</label>
+                <div class="flex items-center gap-2">
+                    <span class="text-gray-500">/</span>
+                    <input type="text" name="home_redirect_path" value="{{ $config['home_redirect_path'] ?? 'portal' }}"
+                           class="flex-1 px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500"
+                           placeholder="portal">
+                </div>
+                <p class="text-xs text-gray-500 mt-1">Cuando alguien visite la raiz del sitio ({{ config('app.url') }}) sera redirigido a esta ruta. Ejemplo: <strong>portal</strong>, <strong>tienda</strong>, <strong>inicio</strong></p>
+            </div>
+        </div>
+
         <!-- Theme Colors -->
         <div class="bg-white rounded-lg shadow p-6">
             <h2 class="text-lg font-semibold text-gray-800 mb-4">Colores del Tema</h2>
@@ -215,11 +272,11 @@
             <h2 class="text-lg font-semibold text-gray-800 mb-4">Configuracion General</h2>
             <div class="grid md:grid-cols-2 gap-4">
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Dominio Fallback</label>
-                    <input type="text" name="fallback_domain" value="{{ $config['fallback_domain'] ?? 'tiendas.emc.mx' }}"
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Dominio Externo (opcional)</label>
+                    <input type="text" name="fallback_domain" value="{{ $config['fallback_domain'] ?? '' }}"
                            class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500"
-                           placeholder="tiendas.emc.mx">
-                    <p class="text-xs text-gray-500 mt-1">URL base para tiendas sin dominio propio</p>
+                           placeholder="Dejar vacio para usar {{ parse_url(config('app.url'), PHP_URL_HOST) }}">
+                    <p class="text-xs text-gray-500 mt-1">Solo si usas un dominio externo. Por defecto usa APP_URL ({{ config('app.url') }})</p>
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Promos por Tienda en Portal</label>

@@ -2,7 +2,15 @@
 
 @section('content')
 <div class="flex flex-wrap items-center justify-between gap-4 mb-4">
-    <form class="flex gap-2" method="GET">
+    <form class="flex flex-wrap gap-2" method="GET">
+        @if(!empty($empresas) && isset($empresaId))
+            <select name="empresa_id" onchange="this.form.submit()" class="border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500">
+                <option value="">Todas las empresas</option>
+                @foreach($empresas as $emp)
+                    <option value="{{ $emp->id }}" {{ $emp->id == request('empresa_id') ? 'selected' : '' }}>{{ $emp->nombre }}</option>
+                @endforeach
+            </select>
+        @endif
         <input name="q" value="{{ $search }}" class="border rounded-lg px-4 py-2 w-72 focus:ring-2 focus:ring-primary-500 focus:border-primary-500" placeholder="Nombre / WhatsApp / Email">
         <button class="px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800">Buscar</button>
     </form>
@@ -19,6 +27,9 @@
         <thead class="bg-gray-50 border-b">
             <tr>
                 <th class="text-left p-4 font-semibold text-gray-700">Cliente</th>
+                @if(!empty($empresas))
+                    <th class="text-left p-4 font-semibold text-gray-700">Empresa</th>
+                @endif
                 <th class="text-left p-4 font-semibold text-gray-700">WhatsApp</th>
                 <th class="text-left p-4 font-semibold text-gray-700">Email</th>
                 <th class="text-center p-4 font-semibold text-gray-700">Enviar estatus</th>
@@ -34,6 +45,11 @@
                             <div class="text-xs text-gray-500 truncate max-w-xs">{{ $c->direccion }}</div>
                         @endif
                     </td>
+                    @if(!empty($empresas))
+                        <td class="p-4 text-xs">
+                            <span class="bg-gray-100 text-gray-700 px-2 py-1 rounded">{{ $c->empresa?->nombre ?? 'ID:'.$c->empresa_id }}</span>
+                        </td>
+                    @endif
                     <td class="p-4">
                         @if($c->whatsapp)
                             <a href="https://wa.me/52{{ preg_replace('/[^0-9]/', '', $c->whatsapp) }}" target="_blank" class="text-green-600 hover:text-green-700 flex items-center gap-1">
@@ -77,7 +93,7 @@
                 </tr>
             @empty
                 <tr>
-                    <td colspan="5" class="p-8 text-center text-gray-500">
+                    <td colspan="{{ !empty($empresas) ? 6 : 5 }}" class="p-8 text-center text-gray-500">
                         <div class="flex flex-col items-center gap-2">
                             <svg class="w-12 h-12 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>

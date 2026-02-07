@@ -1,4 +1,4 @@
-@extends('layouts.ops', ['title'=>'WhatsApp'])
+@extends('layouts.admin', ['title'=>'WhatsApp Logs', 'header'=>'WhatsApp Logs'])
 @section('content')
 <div class="flex items-center justify-between mb-4">
   <div>

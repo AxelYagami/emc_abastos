@@ -40,7 +40,7 @@ class DemoSeeder extends Seeder
             ['email' => $superEmail],
             [
                 'name' => 'Superadmin',
-                'password' => Hash::make('ChangeMe#2026'),
+                'password' => Hash::make('22'),
                 'whatsapp' => null,
                 'remember_token' => Str::random(10),
                 'updated_at' => $now,

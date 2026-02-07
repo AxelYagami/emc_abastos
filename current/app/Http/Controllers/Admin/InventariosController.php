@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Admin\Traits\AdminContext;
+use App\Models\Empresa;
 use App\Models\Producto;
 use App\Models\InventarioMovimiento;
 use App\Services\InventarioService;
@@ -10,12 +12,21 @@ use Illuminate\Http\Request;
 
 class InventariosController extends Controller
 {
+    use AdminContext;
+
     public function index(Request $request, InventarioService $inv)
     {
-        $empresaId = (int) $request->session()->get('empresa_id');
+        $empresaId = $this->resolveEmpresaId($request);
         $search = trim((string)$request->get('q',''));
 
-        $q = Producto::where('empresa_id',$empresaId)->orderBy('id');
+        $q = Producto::orderBy('id');
+
+        if ($this->isSuperAdmin() && !$request->filled('empresa_id')) {
+            $q->with('empresa');
+        } else {
+            $q->where('empresa_id', $empresaId);
+        }
+
         if ($search !== '') {
             $s = mb_substr(preg_replace('/[%_]+/u',' ', $search), 0, 80);
             $q->where('nombre','ilike',"%{$s}%");
@@ -24,15 +35,17 @@ class InventariosController extends Controller
         $productos = $q->paginate(30)->withQueryString();
         $rows = [];
         foreach ($productos as $p) {
-            $rows[] = ['producto'=>$p, 'stock'=>$inv->stock($empresaId, $p->id)];
+            $rows[] = ['producto'=>$p, 'stock'=>$inv->stock($p->empresa_id, $p->id)];
         }
 
-        return view('admin.inventarios.index', compact('productos','rows','search'));
+        $empresas = $this->getEmpresasForUser();
+
+        return view('admin.inventarios.index', compact('productos','rows','search','empresas','empresaId'));
     }
 
     public function kardex(Request $request, int $productoId, InventarioService $inv)
     {
-        $empresaId = (int) $request->session()->get('empresa_id');
+        $empresaId = $this->resolveEmpresaId($request);
         $producto = Producto::where('empresa_id',$empresaId)->findOrFail($productoId);
 
         $movs = InventarioMovimiento::where('empresa_id',$empresaId)->where('producto_id',$producto->id)->orderByDesc('id')->limit(200)->get();
@@ -43,7 +56,7 @@ class InventariosController extends Controller
 
     public function ajustar(Request $request, int $productoId, InventarioService $inv)
     {
-        $empresaId = (int) $request->session()->get('empresa_id');
+        $empresaId = $this->resolveEmpresaId($request);
         $producto = Producto::where('empresa_id',$empresaId)->findOrFail($productoId);
 
         $data = $request->validate([

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Operaciones;
 
 use App\Http\Controllers\Controller;
 use App\Models\Orden;
+use App\Models\OrdenPago;
 use App\Services\WhatsApp\OrderWhatsAppNotifier;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -72,23 +73,38 @@ class OrdenesController extends Controller
         ]);
 
         $from = $orden->status;
-        $orden->status = $data['status'];
-        $orden->save();
 
-        // historial
-        DB::table('orden_status_histories')->insert([
-            'empresa_id'=>$empresaId,
-            'orden_id'=>$orden->id,
-            'from_status'=>$from,
-            'to_status'=>$orden->status,
-            'actor_usuario_id'=>auth()->id(),
-            'nota'=>$data['nota'] ?? null,
-            'created_at'=>now(),
-            'updated_at'=>now(),
-        ]);
+        // Usar OrderFlowService para transicion (historial + evento push)
+        $flow = app(\App\Services\OrderFlowService::class);
+        $flow->applyTransition($orden, $data['status'], auth()->id(), $data['nota'] ?? null);
 
+        // WhatsApp notification
         $wa->onStatusChanged($orden, $from);
 
         return back()->with('ok','Estatus actualizado');
+    }
+
+    public function storePago(Request $request, int $id)
+    {
+        $empresaId = (int) $request->session()->get('empresa_id');
+        $orden = Orden::where('empresa_id', $empresaId)->findOrFail($id);
+
+        $data = $request->validate([
+            'metodo' => 'required|in:cash,card,transfer',
+            'monto' => 'required|numeric|min:0.01',
+            'referencia' => 'nullable|string|max:120',
+        ]);
+
+        OrdenPago::create([
+            'orden_id' => $orden->id,
+            'empresa_id' => $empresaId,
+            'metodo' => $data['metodo'],
+            'monto' => $data['monto'],
+            'referencia' => $data['referencia'],
+            'status' => 'paid',
+            'actor_usuario_id' => auth()->id(),
+        ]);
+
+        return back()->with('ok', 'Pago registrado');
     }
 }

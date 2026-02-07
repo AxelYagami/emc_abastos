@@ -14,6 +14,7 @@ class Empresa extends Model
         'activa',
         'brand_nombre_publico',
         'brand_color',
+        'support_email',
         'logo_path',
         'logo_url',
         'skin',
@@ -24,18 +25,47 @@ class Empresa extends Model
         'handle',
         'primary_domain',
         'description',
+        'descripcion',
         'tags',
         'sort_order',
         'is_featured',
+        'hora_atencion_inicio',
+        'hora_atencion_fin',
+        'pickup_eta_hours',
+        'enable_pickup',
+        'enable_delivery',
+        'template_config',
     ];
 
     protected $casts = [
         'config' => 'array',
         'settings' => 'array',
         'tags' => 'array',
+        'template_config' => 'array',
         'activa' => 'boolean',
         'is_featured' => 'boolean',
+        'enable_pickup' => 'boolean',
+        'enable_delivery' => 'boolean',
+        'pickup_eta_hours' => 'decimal:1',
     ];
+
+    /**
+     * Get hora_atencion_inicio formatted for time input (HH:MM)
+     */
+    public function getHoraAtencionInicioAttribute($value): ?string
+    {
+        if (!$value) return null;
+        return substr($value, 0, 5); // Take only HH:MM
+    }
+
+    /**
+     * Get hora_atencion_fin formatted for time input (HH:MM)
+     */
+    public function getHoraAtencionFinAttribute($value): ?string
+    {
+        if (!$value) return null;
+        return substr($value, 0, 5); // Take only HH:MM
+    }
 
     // Relationships
     public function categorias()
@@ -122,13 +152,38 @@ class Empresa extends Model
         return $id;
     }
 
+    /**
+     * Get the store path (e.g., "t/mi-tienda")
+     * Uses store_domains.domain if available, otherwise fallback to handle
+     */
+    public function getStorePathAttribute(): string
+    {
+        // Check if there's a registered store_domain path
+        $storeDomain = $this->domains()->where('is_active', true)->where('is_primary', true)->first();
+        if ($storeDomain && $storeDomain->domain) {
+            // If domain looks like a path (starts with t/ or doesn't contain dots)
+            if (str_starts_with($storeDomain->domain, 't/') || !str_contains($storeDomain->domain, '.')) {
+                return ltrim($storeDomain->domain, '/');
+            }
+        }
+
+        // Fallback to handle-based path
+        return 't/' . $this->handle;
+    }
+
+    /**
+     * Get the full store URL using APP_URL + store path
+     */
     public function getStoreUrlAttribute(): string
     {
-        if ($this->primary_domain) {
+        // If empresa has a custom full domain (external), use it
+        if ($this->primary_domain && str_contains($this->primary_domain, '.')) {
             return "https://{$this->primary_domain}";
         }
-        $fallback = PortalConfig::get('fallback_domain', 'tiendas.emc.mx');
-        return "https://{$fallback}/t/{$this->handle}";
+
+        // Use APP_URL + store path
+        $appUrl = rtrim(config('app.url'), '/');
+        return $appUrl . '/' . $this->store_path;
     }
 
     public function getDisplayLogoAttribute(): ?string
@@ -202,6 +257,40 @@ class Empresa extends Model
     public function getDefaultProductImage(): string
     {
         return $this->getSetting('default_product_image_url')
-            ?? asset('images/producto-default.png');
+            ?? asset('images/producto-default.svg');
+    }
+
+    // Fulfillment helpers
+    public function isPickupEnabled(): bool
+    {
+        return $this->enable_pickup ?? true;
+    }
+
+    public function isDeliveryEnabled(): bool
+    {
+        return $this->enable_delivery ?? true;
+    }
+
+    public function getAvailableFulfillmentTypes(): array
+    {
+        $types = [];
+        if ($this->isPickupEnabled()) {
+            $types[] = 'pickup';
+        }
+        if ($this->isDeliveryEnabled()) {
+            $types[] = 'delivery';
+        }
+        return $types;
+    }
+
+    public function getDefaultFulfillmentType(): string
+    {
+        if ($this->isPickupEnabled()) {
+            return 'pickup';
+        }
+        if ($this->isDeliveryEnabled()) {
+            return 'delivery';
+        }
+        return 'pickup'; // Fallback
     }
 }

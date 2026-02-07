@@ -18,9 +18,15 @@ class SecurityHeaders
         $response->headers->set('Referrer-Policy', 'strict-origin-when-cross-origin');
         $response->headers->set('Permissions-Policy', 'geolocation=(), microphone=(), camera=()');
 
-        // CSP: permite Tailwind CDN (demo). Endurecer cuando assets sean locales.
+        // CSP: permite CDNs necesarios (Tailwind, Alpine, Chart.js)
         $response->headers->set('Content-Security-Policy',
-            "default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com; script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com"
+            "default-src 'self'; " .
+            "img-src 'self' data: https: blob:; " .
+            "style-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com https://cdn.jsdelivr.net; " .
+            "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.tailwindcss.com https://cdn.jsdelivr.net; " .
+            "font-src 'self' https://cdn.jsdelivr.net; " .
+            "connect-src 'self' https://cdn.tailwindcss.com https://cdn.jsdelivr.net; " .
+            "worker-src 'self'"
         );
 
         return $response;

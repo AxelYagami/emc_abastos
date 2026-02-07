@@ -16,7 +16,7 @@ class ProductImageService
         $this->config = [
             'enabled' => config('images.auto_fetch', true),
             'source' => config('images.source', 'unsplash'),
-            'default_image' => config('images.default', '/images/producto-default.jpg'),
+            'default_image' => config('images.default', '/images/producto-default.svg'),
             'cache_hours' => 24,
         ];
     }

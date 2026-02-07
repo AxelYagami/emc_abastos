@@ -14,12 +14,28 @@ class RequireRole
         if (!$user) return redirect()->route('login');
 
         $empresaId = $request->session()->get('empresa_id');
-        if (!$empresaId) return redirect()->route('empresa.switch');
+        if (!$empresaId) return redirect()->route('login');
 
+        // Check if user is a global superadmin (has superadmin role in ANY empresa)
+        $isSuperAdmin = DB::table('empresa_usuario')
+            ->join('roles', 'roles.id', '=', 'empresa_usuario.rol_id')
+            ->where('empresa_usuario.usuario_id', $user->id)
+            ->where('roles.slug', 'superadmin')
+            ->exists();
+
+        // Superadmin bypasses empresa-specific role check — they can access
+        // any empresa context with any role requirement that includes superadmin
+        if ($isSuperAdmin) {
+            if (empty($roles) || in_array('superadmin', $roles, true)) {
+                return $next($request);
+            }
+        }
+
+        // Normal check: user must have one of the required roles for THIS empresa
         $row = DB::table('empresa_usuario')
-            ->join('roles','roles.id','=','empresa_usuario.rol_id')
-            ->where('empresa_usuario.empresa_id',$empresaId)
-            ->where('empresa_usuario.usuario_id',$user->id)
+            ->join('roles', 'roles.id', '=', 'empresa_usuario.rol_id')
+            ->where('empresa_usuario.empresa_id', $empresaId)
+            ->where('empresa_usuario.usuario_id', $user->id)
             ->select('roles.slug')
             ->first();
 

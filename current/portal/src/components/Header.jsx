@@ -106,19 +106,10 @@ export default function Header({ config, onOpenAssistant }) {
             {/* Register */}
             <a
               href="/registro"
-              className="hidden sm:flex items-center gap-2 px-3 py-2 text-gray-600 hover:text-primary-600 hover:bg-gray-50 rounded-lg font-medium transition-colors"
-            >
-              <Icons.User />
-              <span>Registro</span>
-            </a>
-
-            {/* Admin/Login - Changed to "Ingreso" */}
-            <a
-              href="/login"
               className="hidden sm:flex items-center gap-2 px-4 py-2 bg-gray-900 text-white rounded-lg font-medium hover:bg-gray-800 transition-colors"
             >
-              <Icons.Settings />
-              <span>Ingreso</span>
+              <Icons.User />
+              <span>Crear cuenta</span>
             </a>
 
             {/* Mobile menu button */}
@@ -152,14 +143,7 @@ export default function Header({ config, onOpenAssistant }) {
                 className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-gray-50 rounded-lg font-medium"
               >
                 <Icons.User />
-                <span>Registrarse</span>
-              </a>
-              <a
-                href="/login"
-                className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-gray-50 rounded-lg font-medium"
-              >
-                <Icons.Settings />
-                <span>Ingreso</span>
+                <span>Crear cuenta</span>
               </a>
             </nav>
           </div>

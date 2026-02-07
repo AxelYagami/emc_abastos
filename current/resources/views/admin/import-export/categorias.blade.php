@@ -2,6 +2,20 @@
 
 @section('content')
 <div class="max-w-4xl">
+
+  @if($empresas ?? false)
+  <div class="mb-6 bg-white rounded-xl shadow-sm border p-4">
+    <form method="GET" class="flex items-center gap-4">
+      <label class="text-sm font-medium text-gray-700">Empresa destino:</label>
+      <select name="empresa_id" onchange="this.form.submit()" class="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-primary-500">
+        @foreach($empresas as $emp)
+          <option value="{{ $emp->id }}" {{ $emp->id == ($empresaId ?? session('empresa_id')) ? 'selected' : '' }}>{{ $emp->nombre }}</option>
+        @endforeach
+      </select>
+    </form>
+  </div>
+  @endif
+
   <div class="grid md:grid-cols-2 gap-6">
     <!-- Import Section -->
     <div class="bg-white rounded-xl shadow-sm border p-6">
@@ -100,8 +114,8 @@
       </svg>
       Volver a categorías
     </a>
-    <a href="{{ route('admin.import-export.productos') }}" class="text-gray-600 hover:text-gray-800 font-medium text-sm">
-      Importar/Exportar Productos
+    <a href="{{ route('admin.import-export.hub') }}" class="text-gray-600 hover:text-gray-800 font-medium text-sm">
+      Importar Catalogos
     </a>
   </div>
 </div>

@@ -15,7 +15,7 @@ class ResolveStoreContext
 
         // 1. Try to resolve by custom domain
         $host = $request->getHost();
-        $fallbackDomain = PortalConfig::get('fallback_domain', 'tiendas.emc.mx');
+        $fallbackDomain = PortalConfig::get('fallback_domain') ?? parse_url(config('app.url'), PHP_URL_HOST);
 
         // Skip if it's the fallback domain itself (handled by route)
         if ($host !== $fallbackDomain && !$this->isMainAppDomain($host)) {

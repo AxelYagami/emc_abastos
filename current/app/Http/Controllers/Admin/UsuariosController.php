@@ -70,6 +70,9 @@ class UsuariosController extends Controller
 
         // Assign to empresas
         $firstEmpresa = null;
+        $isSuperAdmin = false;
+        $superadminRolId = null;
+
         if (!empty($data['empresas'])) {
             foreach ($data['empresas'] as $assignment) {
                 DB::table('empresa_usuario')->insert([
@@ -84,7 +87,19 @@ class UsuariosController extends Controller
                 if (!$firstEmpresa) {
                     $firstEmpresa = Empresa::find($assignment['empresa_id']);
                 }
+
+                // Check if this assignment is superadmin
+                $rolSlug = Rol::where('id', $assignment['rol_id'])->value('slug');
+                if ($rolSlug === 'superadmin') {
+                    $isSuperAdmin = true;
+                    $superadminRolId = $assignment['rol_id'];
+                }
             }
+        }
+
+        // Auto-assign superadmin to all active empresas they're not already in
+        if ($isSuperAdmin && $superadminRolId) {
+            $this->ensureSuperadminAllEmpresas($usuario->id, $superadminRolId);
         }
 
         // Send WhatsApp credentials if requested
@@ -155,6 +170,9 @@ class UsuariosController extends Controller
         // Sync empresa assignments
         DB::table('empresa_usuario')->where('usuario_id', $id)->delete();
 
+        $isSuperAdmin = false;
+        $superadminRolId = null;
+
         if (!empty($data['empresas'])) {
             foreach ($data['empresas'] as $assignment) {
                 DB::table('empresa_usuario')->insert([
@@ -165,7 +183,18 @@ class UsuariosController extends Controller
                     'created_at' => now(),
                     'updated_at' => now(),
                 ]);
+
+                $rolSlug = Rol::where('id', $assignment['rol_id'])->value('slug');
+                if ($rolSlug === 'superadmin') {
+                    $isSuperAdmin = true;
+                    $superadminRolId = $assignment['rol_id'];
+                }
             }
+        }
+
+        // Auto-assign superadmin to all active empresas
+        if ($isSuperAdmin && $superadminRolId) {
+            $this->ensureSuperadminAllEmpresas($usuario->id, $superadminRolId);
         }
 
         return redirect()->route('admin.usuarios.index')->with('ok', 'Usuario actualizado correctamente');
@@ -239,5 +268,29 @@ class UsuariosController extends Controller
 
         $status = $usuario->activo ? 'activado' : 'desactivado';
         return back()->with('ok', "Usuario {$status} correctamente");
+    }
+
+    /**
+     * Ensure a superadmin user has pivot rows for ALL active empresas.
+     */
+    private function ensureSuperadminAllEmpresas(int $userId, int $superadminRolId): void
+    {
+        $allEmpresaIds = Empresa::where('activa', true)->pluck('id');
+        $existingIds = DB::table('empresa_usuario')
+            ->where('usuario_id', $userId)
+            ->pluck('empresa_id');
+
+        $missing = $allEmpresaIds->diff($existingIds);
+
+        foreach ($missing as $empresaId) {
+            DB::table('empresa_usuario')->insert([
+                'empresa_id' => $empresaId,
+                'usuario_id' => $userId,
+                'rol_id' => $superadminRolId,
+                'activo' => true,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        }
     }
 }

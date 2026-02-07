@@ -1,9 +1,19 @@
 @php
     $empresaId = session('empresa_id');
-    $empresa = $empresaId ? \App\Models\Empresa::find($empresaId) : null;
-    $appName = $empresa ? $empresa->getAppName() : 'Mercado De Abastos - Guadalupe / San Nicolas';
+    $empresa = $empresaId ? \App\Models\Empresa::with('theme')->find($empresaId) : null;
+    $themeResolver = new \App\Services\ThemeResolver($empresa);
+
+    $appName = $empresa ? $empresa->getAppName() : 'Mercado De Abastos';
     $logoUrl = $empresa ? $empresa->getLogoUrl() : asset('storage/brand/logo-iados.png');
-    $primaryColor = $empresa ? $empresa->getPrimaryColor() : '#16a34a';
+
+    // Get resolved colors
+    $primaryColor = $themeResolver->color('primary');
+    $secondaryColor = $themeResolver->color('secondary');
+    $accentColor = $themeResolver->color('accent');
+    $bannerConfig = $themeResolver->banner();
+    $typography = $themeResolver->typography();
+    $copyTexts = $themeResolver->copy();
+
     $cart = session('cart', []);
     $cartCount = array_sum($cart);
 @endphp
@@ -15,9 +25,51 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ $title ?? $appName }}</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.3/dist/cdn.min.js"></script>
+    <script>
+        tailwind.config = @json($themeResolver->tailwindConfig())
+    </script>
     <style>
-        :root { --primary-color: {{ $primaryColor }}; }
+        :root {
+            {{ $themeResolver->cssVariables() }};
+        }
+        body { font-family: {{ $typography['body_font'] }}; font-weight: {{ $typography['body_weight'] }}; }
+        h1, h2, h3, h4, h5, h6 { font-family: {{ $typography['heading_font'] }}; font-weight: {{ $typography['heading_weight'] }}; }
+
+        /* Dynamic primary color utilities */
+        .bg-primary-600 { background-color: {{ $primaryColor }} !important; }
+        .bg-primary-700 { background-color: color-mix(in srgb, {{ $primaryColor }} 85%, black) !important; }
+        .bg-primary-50 { background-color: color-mix(in srgb, {{ $primaryColor }} 10%, white) !important; }
+        .bg-primary-100 { background-color: color-mix(in srgb, {{ $primaryColor }} 20%, white) !important; }
+        .text-primary-600 { color: {{ $primaryColor }} !important; }
+        .text-primary-700 { color: color-mix(in srgb, {{ $primaryColor }} 85%, black) !important; }
+        .border-primary-500 { border-color: {{ $primaryColor }} !important; }
+        .ring-primary-500 { --tw-ring-color: {{ $primaryColor }} !important; }
+        .hover\:bg-primary-700:hover { background-color: color-mix(in srgb, {{ $primaryColor }} 85%, black) !important; }
+        .focus\:ring-primary-500:focus { --tw-ring-color: {{ $primaryColor }} !important; }
+
+        /* Full-width banner */
+        .banner-full-width {
+            width: 100vw;
+            position: relative;
+            left: 50%;
+            right: 50%;
+            margin-left: -50vw;
+            margin-right: -50vw;
+        }
+
+        /* Accessible banner overlays */
+        .banner-overlay-gradient-dark {
+            background: linear-gradient(to right, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.3) 50%, transparent 100%);
+        }
+        .banner-overlay-gradient-light {
+            background: linear-gradient(to right, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0.5) 50%, transparent 100%);
+        }
+        .banner-overlay-gradient-radial {
+            background: radial-gradient(ellipse at left center, rgba(0,0,0,0.6) 0%, transparent 70%);
+        }
+
+        /* Animations */
         .toast-enter { animation: slideIn 0.3s ease-out; }
         .toast-leave { animation: slideOut 0.3s ease-in forwards; }
         @keyframes slideIn { from { transform: translateY(-100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
@@ -45,7 +97,7 @@
                           x-cloak></span>
                 </a>
                 @auth
-                    <a class="px-3 py-2 rounded hover:bg-gray-100" href="{{ route('empresa.switch') }}">Empresa</a>
+                    <a class="px-3 py-2 rounded hover:bg-gray-100" href="{{ route('admin.dashboard') }}">Empresa</a>
                     @if(auth()->user()->isSuperAdmin() || auth()->user()->getRolForEmpresa(session('empresa_id'))?->slug === 'admin_empresa')
                         <a class="px-3 py-2 rounded bg-green-100 text-green-700" href="{{ route('admin.dashboard') }}">Admin</a>
                     @endif

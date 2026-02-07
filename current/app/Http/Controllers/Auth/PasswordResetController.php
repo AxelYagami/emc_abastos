@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\Empresa;
 use App\Models\Usuario;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -27,7 +28,7 @@ class PasswordResetController extends Controller
         $user = Usuario::where('email', $request->email)->first();
 
         if (!$user) {
-            return back()->with('status', 'Si el correo existe, recibirás un enlace de recuperación.');
+            return back()->with('status', 'Si el correo existe, recibiras un enlace de recuperacion.');
         }
 
         $token = Str::random(64);
@@ -42,17 +43,29 @@ class PasswordResetController extends Controller
 
         $resetUrl = route('password.reset', ['token' => $token, 'email' => $request->email]);
 
+        // Resolve empresa context for branding the email
+        $empresa = $this->resolveEmpresaForUser($user);
+        $appName = $empresa ? $empresa->getAppName() : config('app.name', 'EMC Abastos');
+        $replyTo = $this->getReplyToEmail($empresa);
+
         try {
-            Mail::send('emails.password-reset', ['resetUrl' => $resetUrl, 'user' => $user], function ($message) use ($request) {
+            Mail::send('emails.password-reset', [
+                'resetUrl' => $resetUrl,
+                'user' => $user,
+                'appName' => $appName,
+            ], function ($message) use ($request, $appName, $replyTo) {
                 $message->to($request->email);
-                $message->subject('Recuperar contraseña - EMC Abastos');
+                $message->subject("Recuperar contrasena - {$appName}");
+
+                if ($replyTo) {
+                    $message->replyTo($replyTo, $appName);
+                }
             });
         } catch (\Exception $e) {
-            // Log error but don't expose to user
             \Log::error('Password reset email failed: ' . $e->getMessage());
         }
 
-        return back()->with('status', 'Si el correo existe, recibirás un enlace de recuperación.');
+        return back()->with('status', 'Si el correo existe, recibiras un enlace de recuperacion.');
     }
 
     public function showResetForm(Request $request, string $token)
@@ -76,11 +89,11 @@ class PasswordResetController extends Controller
             ->first();
 
         if (!$record) {
-            return back()->withErrors(['email' => 'Token de recuperación inválido.']);
+            return back()->withErrors(['email' => 'Token de recuperacion invalido.']);
         }
 
         if (!Hash::check($request->token, $record->token)) {
-            return back()->withErrors(['email' => 'Token de recuperación inválido.']);
+            return back()->withErrors(['email' => 'Token de recuperacion invalido.']);
         }
 
         if (Carbon::parse($record->created_at)->addHours(2)->isPast()) {
@@ -98,6 +111,43 @@ class PasswordResetController extends Controller
 
         DB::table('password_reset_tokens')->where('email', $request->email)->delete();
 
-        return redirect()->route('login')->with('status', 'Contraseña actualizada correctamente. Inicia sesión.');
+        return redirect()->route('login')->with('status', 'Contrasena actualizada correctamente. Inicia sesion.');
+    }
+
+    /**
+     * Get the user's primary empresa for email branding.
+     */
+    private function resolveEmpresaForUser(Usuario $user): ?Empresa
+    {
+        $pivot = DB::table('empresa_usuario')
+            ->where('usuario_id', $user->id)
+            ->where('activo', true)
+            ->first();
+
+        if ($pivot) {
+            return Empresa::find($pivot->empresa_id);
+        }
+
+        return null;
+    }
+
+    /**
+     * Get reply-to email: empresa support_email > superadmin fallback.
+     */
+    private function getReplyToEmail(?Empresa $empresa): ?string
+    {
+        if ($empresa && !empty($empresa->support_email)) {
+            return $empresa->support_email;
+        }
+
+        // Fallback: first superadmin email
+        $superadmin = DB::table('empresa_usuario')
+            ->join('roles', 'empresa_usuario.rol_id', '=', 'roles.id')
+            ->join('usuarios', 'empresa_usuario.usuario_id', '=', 'usuarios.id')
+            ->where('roles.slug', 'superadmin')
+            ->select('usuarios.email')
+            ->first();
+
+        return $superadmin?->email;
     }
 }

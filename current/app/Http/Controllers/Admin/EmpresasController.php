@@ -4,9 +4,12 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Empresa;
+use App\Models\StoreDomain;
 use App\Models\Theme;
+use App\Services\ThemeResolver;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
 class EmpresasController extends Controller
@@ -44,6 +47,13 @@ class EmpresasController extends Controller
             'mp_public_key' => 'nullable|string|max:500',
             'mp_webhook_secret' => 'nullable|string|max:255',
             'default_product_image_url' => 'nullable|string|max:500',
+            // Pickup settings
+            'hora_atencion_inicio' => 'nullable|date_format:H:i',
+            'hora_atencion_fin' => 'nullable|date_format:H:i',
+            'pickup_eta_hours' => 'nullable|numeric|min:0|max:72',
+            // Fulfillment options
+            'enable_pickup' => 'boolean',
+            'enable_delivery' => 'boolean',
         ]);
 
         $slug = $data['slug'] ?? Str::slug($data['nombre']);
@@ -78,7 +88,7 @@ class EmpresasController extends Controller
             $tags = array_filter($tags);
         }
 
-        Empresa::create([
+        $empresa = Empresa::create([
             'nombre' => $data['nombre'],
             'slug' => $slug,
             'handle' => $handle,
@@ -91,7 +101,18 @@ class EmpresasController extends Controller
             'settings' => array_filter($settings),
             'descripcion' => $data['descripcion'] ?? null,
             'tags' => !empty($tags) ? $tags : null,
+            'hora_atencion_inicio' => $data['hora_atencion_inicio'] ?? '08:00',
+            'hora_atencion_fin' => $data['hora_atencion_fin'] ?? '18:00',
+            'pickup_eta_hours' => $data['pickup_eta_hours'] ?? 2.0,
+            'enable_pickup' => $data['enable_pickup'] ?? true,
+            'enable_delivery' => $data['enable_delivery'] ?? true,
         ]);
+
+        // Auto-create store_domain with path t/{handle}
+        $this->ensureStoreDomain($empresa);
+
+        // Auto-assign all superadmin users to the new empresa
+        $this->assignSuperadminsToEmpresa($empresa);
 
         return redirect()->route('admin.empresas.index')->with('ok', 'Empresa creada correctamente');
     }
@@ -113,6 +134,7 @@ class EmpresasController extends Controller
             'handle' => 'nullable|string|max:120|unique:empresas,handle,' . $id,
             'brand_nombre_publico' => 'nullable|string|max:200',
             'brand_color' => 'nullable|string|max:20',
+            'support_email' => 'nullable|email|max:200',
             'activa' => 'boolean',
             'theme_id' => 'nullable|exists:themes,id',
             'logo' => 'nullable|image|max:2048',
@@ -129,6 +151,13 @@ class EmpresasController extends Controller
             'mp_public_key' => 'nullable|string|max:500',
             'mp_webhook_secret' => 'nullable|string|max:255',
             'default_product_image_url' => 'nullable|string|max:500',
+            // Pickup settings
+            'hora_atencion_inicio' => 'nullable|date_format:H:i',
+            'hora_atencion_fin' => 'nullable|date_format:H:i',
+            'pickup_eta_hours' => 'nullable|numeric|min:0|max:72',
+            // Fulfillment options
+            'enable_pickup' => 'boolean',
+            'enable_delivery' => 'boolean',
         ]);
 
         // Handle logo
@@ -181,6 +210,7 @@ class EmpresasController extends Controller
             'public_id' => $publicId,
             'brand_nombre_publico' => $data['brand_nombre_publico'] ?? null,
             'brand_color' => $data['brand_color'] ?? null,
+            'support_email' => $data['support_email'] ?? null,
             'logo_path' => $logoPath,
             'activa' => $data['activa'] ?? true,
             'theme_id' => $data['theme_id'] ?? null,
@@ -188,7 +218,18 @@ class EmpresasController extends Controller
             'descripcion' => $data['descripcion'] ?? null,
             'tags' => !empty($tags) ? $tags : null,
             'is_featured' => $request->boolean('is_featured'),
+            'hora_atencion_inicio' => $data['hora_atencion_inicio'] ?? $empresa->hora_atencion_inicio ?? '08:00',
+            'hora_atencion_fin' => $data['hora_atencion_fin'] ?? $empresa->hora_atencion_fin ?? '18:00',
+            'pickup_eta_hours' => $data['pickup_eta_hours'] ?? $empresa->pickup_eta_hours ?? 2.0,
+            'enable_pickup' => $request->boolean('enable_pickup'),
+            'enable_delivery' => $request->boolean('enable_delivery'),
         ]);
+
+        // Sync store_domain if handle changed
+        $this->ensureStoreDomain($empresa);
+
+        // Clear theme cache so changes apply immediately
+        ThemeResolver::clearCache($empresa->id);
 
         return redirect()->route('admin.empresas.index')->with('ok', 'Empresa actualizada correctamente');
     }
@@ -226,5 +267,67 @@ class EmpresasController extends Controller
         }
 
         return $handle . $suffix;
+    }
+
+    /**
+     * Auto-assign all superadmin users to a newly created empresa.
+     */
+    private function assignSuperadminsToEmpresa(Empresa $empresa): void
+    {
+        // Find the superadmin role ID
+        $superadminRolId = DB::table('roles')->where('slug', 'superadmin')->value('id');
+        if (!$superadminRolId) return;
+
+        // Find all users that have superadmin role in any empresa
+        $superadminUserIds = DB::table('empresa_usuario')
+            ->where('rol_id', $superadminRolId)
+            ->distinct()
+            ->pluck('usuario_id');
+
+        // Check which ones are already assigned to this empresa
+        $existingUserIds = DB::table('empresa_usuario')
+            ->where('empresa_id', $empresa->id)
+            ->pluck('usuario_id');
+
+        $missing = $superadminUserIds->diff($existingUserIds);
+
+        foreach ($missing as $userId) {
+            DB::table('empresa_usuario')->insert([
+                'empresa_id' => $empresa->id,
+                'usuario_id' => $userId,
+                'rol_id' => $superadminRolId,
+                'activo' => true,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        }
+    }
+
+    /**
+     * Ensure empresa has a store_domain entry with path t/{handle}
+     */
+    private function ensureStoreDomain(Empresa $empresa): void
+    {
+        $storePath = 't/' . $empresa->handle;
+
+        // Check if primary domain exists
+        $primaryDomain = $empresa->domains()->where('is_primary', true)->first();
+
+        if ($primaryDomain) {
+            // Update existing primary domain if handle changed
+            if ($primaryDomain->domain !== $storePath) {
+                StoreDomain::clearCache($primaryDomain->domain);
+                $primaryDomain->update(['domain' => $storePath]);
+            }
+        } else {
+            // Create new primary store_domain
+            StoreDomain::create([
+                'empresa_id' => $empresa->id,
+                'domain' => $storePath,
+                'is_primary' => true,
+                'is_active' => true,
+                'ssl_enabled' => true,
+            ]);
+        }
     }
 }

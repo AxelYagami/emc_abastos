@@ -8,24 +8,45 @@ use App\Models\Producto;
 use App\Models\Cliente;
 use App\Models\Empresa;
 use App\Services\MercadoPagoService;
+use App\Services\PickupEtaService;
+use App\Services\WhatsApp\OrderWhatsAppNotifier;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 class CheckoutController extends Controller
 {
+    protected PickupEtaService $etaService;
+    protected OrderWhatsAppNotifier $waNotifier;
+
+    public function __construct(PickupEtaService $etaService, OrderWhatsAppNotifier $waNotifier)
+    {
+        $this->etaService = $etaService;
+        $this->waNotifier = $waNotifier;
+    }
+
     public function show()
     {
-        $cart = session('cart', []);
+        $empresaId = (int) session('empresa_id', 0);
+        $fullCart = session('cart', []);
+        $cart = $fullCart[$empresaId] ?? [];
+
         if (empty($cart)) {
             return redirect()->route('cart.index')->withErrors(['cart' => 'Tu carrito está vacío.']);
         }
 
-        $empresaId = session('empresa_id');
         $empresa = Empresa::find($empresaId);
         $hasMercadoPago = $empresa && $empresa->hasMercadoPago();
 
-        return view('store.checkout', compact('hasMercadoPago', 'empresa'));
+        // Calculate pickup ETA
+        $pickupEta = null;
+        $pickupEtaFormatted = null;
+        if ($empresa) {
+            $pickupEta = $this->etaService->calculateEta($empresa);
+            $pickupEtaFormatted = $this->etaService->formatEta($pickupEta);
+        }
+
+        return view('store.checkout', compact('hasMercadoPago', 'empresa', 'pickupEta', 'pickupEtaFormatted'));
     }
 
     public function place(Request $request)
@@ -38,31 +59,38 @@ class CheckoutController extends Controller
             'metodo_pago' => ['nullable', 'in:efectivo,mercadopago'],
         ]);
 
-        $empresaId = session('empresa_id');
+        $empresaId = (int) session('empresa_id', 0);
         if (!$empresaId) {
-            return redirect()->route('empresa.switch')->withErrors(['empresa' => 'Selecciona una empresa antes de comprar.']);
+            return redirect()->route('login')->withErrors(['empresa' => 'Selecciona una empresa antes de comprar.']);
         }
 
-        $cart = session('cart', []);
+        $fullCart = session('cart', []);
+        $cart = $fullCart[$empresaId] ?? [];
         if (empty($cart)) {
             return redirect()->route('cart.index')->withErrors(['cart' => 'Tu carrito está vacío.']);
         }
 
+        // Normalize qty values (handle both ['qty' => n] and int formats)
+        $normalizedCart = [];
+        foreach ($cart as $pid => $item) {
+            $normalizedCart[$pid] = is_array($item) ? ($item['qty'] ?? 1) : (int) $item;
+        }
+        $cart = $normalizedCart;
+
         $productos = Producto::whereIn('id', array_keys($cart))->get()->keyBy('id');
 
         foreach ($cart as $pid => $qty) {
-            $p = $productos->get((int)$pid);
+            $p = $productos->get((int) $pid);
             if (!$p) return back()->withErrors(['cart' => 'Producto inválido.'])->withInput();
-            if ((int)$p->empresa_id !== (int)$empresaId) {
-                return back()->withErrors(['cart' => 'Tu carrito contiene productos de otra empresa.']);
-            }
             if (isset($p->activo) && !$p->activo) {
                 return back()->withErrors(['cart' => 'Tu carrito contiene productos inactivos.'])->withInput();
             }
             if ($qty < 1) return back()->withErrors(['cart' => 'Cantidad inválida.'])->withInput();
         }
 
-        $orden = DB::transaction(function () use ($request, $empresaId, $cart, $productos) {
+        $empresa = Empresa::find($empresaId);
+
+        $orden = DB::transaction(function () use ($request, $empresaId, $empresa, $cart, $productos) {
             // Upsert cliente
             $cliente = Cliente::upsertFromCheckout(
                 $empresaId,
@@ -82,13 +110,22 @@ class CheckoutController extends Controller
                 $subtotal += ((float)$p->precio) * ((int)$qty);
             }
 
+            // Calculate pickup ETA for pickup orders
+            $tipoEntrega = $request->input('tipo_entrega', 'pickup');
+            $estimatedReadyAt = null;
+            if ($tipoEntrega === 'pickup' && $empresa) {
+                $estimatedReadyAt = $this->etaService->calculateEta($empresa);
+            }
+
             $orden = Orden::create([
                 'empresa_id' => $empresaId,
                 'cliente_id' => $cliente->id,
                 'usuario_id' => auth()->id(),
                 'folio' => $folio,
                 'status' => 'creada',
-                'tipo_entrega' => $request->input('tipo_entrega', 'pickup'),
+                'tipo_entrega' => $tipoEntrega,
+                'fulfillment_type' => $tipoEntrega,
+                'estimated_ready_at' => $estimatedReadyAt,
                 'comprador_nombre' => $request->input('comprador_nombre'),
                 'comprador_whatsapp' => $request->input('comprador_whatsapp'),
                 'comprador_email' => $request->input('comprador_email'),
@@ -110,20 +147,31 @@ class CheckoutController extends Controller
                     'orden_id' => $orden->id,
                     'empresa_id' => $empresaId,
                     'producto_id' => $p->id,
-                    'nombre_snapshot' => $p->nombre,
                     'nombre' => $p->nombre,
-                    'precio_unitario' => $precio,
                     'precio' => $precio,
                     'cantidad' => (int)$qty,
                     'total' => $total,
                 ]);
             }
 
-            session()->forget('cart');
-            session()->forget('cart_empresa_id');
+            // Clear only this store's cart, preserve other stores
+            $currentFullCart = session('cart', []);
+            unset($currentFullCart[$empresaId]);
+            if (empty($currentFullCart)) {
+                session()->forget('cart');
+            } else {
+                session(['cart' => $currentFullCart]);
+            }
 
             return $orden;
         });
+
+        // Notify buyer + sellers via WhatsApp
+        try {
+            $this->waNotifier->onCreated($orden);
+        } catch (\Exception $e) {
+            \Log::error('WhatsApp notification error', ['error' => $e->getMessage()]);
+        }
 
         // If MercadoPago selected and configured, redirect to payment
         if ($request->input('metodo_pago') === 'mercadopago') {

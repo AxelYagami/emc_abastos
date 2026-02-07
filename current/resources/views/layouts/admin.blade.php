@@ -31,7 +31,7 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ $title ?? 'Admin' }} - {{ $appName }}</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.3/dist/cdn.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
         tailwind.config = {
@@ -122,6 +122,20 @@
                     <span x-show="sidebarOpen">Clientes</span>
                 </a>
 
+                <a href="{{ route('admin.whatsapp.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition {{ request()->routeIs('admin.whatsapp.*') ? 'bg-white/20 text-white' : 'text-primary-100 hover:bg-white/10' }}">
+                    <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
+                    </svg>
+                    <span x-show="sidebarOpen">WhatsApp</span>
+                </a>
+
+                <a href="{{ route('admin.import-export.hub') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition {{ request()->routeIs('admin.import-export.*') ? 'bg-white/20 text-white' : 'text-primary-100 hover:bg-white/10' }}">
+                    <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
+                    </svg>
+                    <span x-show="sidebarOpen">Importar Catalogos</span>
+                </a>
+
                 <a href="{{ route('admin.usuarios.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition {{ request()->routeIs('admin.usuarios.*') ? 'bg-white/20 text-white' : 'text-primary-100 hover:bg-white/10' }}">
                     <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
@@ -177,6 +191,13 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
                     </svg>
                     <span x-show="sidebarOpen">Operaciones</span>
+                </a>
+
+                <a href="{{ route('ops.movil') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition {{ request()->routeIs('ops.movil*') ? 'bg-white/20 text-white' : 'text-primary-100 hover:bg-white/10' }}">
+                    <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+                    </svg>
+                    <span x-show="sidebarOpen">Ops Movil</span>
                 </a>
 
                 <div class="border-t border-primary-700/50 my-3"></div>
@@ -251,7 +272,49 @@
                 </div>
                 <div class="flex items-center gap-4">
                     <!-- Inline Empresa Switcher -->
-                    @if($userEmpresas->count() > 1)
+                    @if($isSuperAdmin && $userEmpresas->count() > 1)
+                        {{-- Superadmin: inline filter with search + "Ver todas" --}}
+                        <div class="relative" x-data="{ open: false, search: '' }">
+                            <button @click="open = !open" class="hidden sm:flex items-center gap-2 text-sm text-gray-600 hover:text-primary-600 transition px-3 py-2 rounded-lg hover:bg-gray-50">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+                                </svg>
+                                <span class="max-w-32 truncate font-medium">{{ session('empresa_nombre') ?? 'Todas' }}</span>
+                                <span class="text-xs bg-primary-100 text-primary-700 px-1.5 py-0.5 rounded-full">{{ $userEmpresas->count() }}</span>
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                                </svg>
+                            </button>
+                            <div x-show="open" x-cloak @click.away="open = false"
+                                 class="absolute right-0 mt-2 w-72 bg-white border rounded-xl shadow-lg z-50 overflow-hidden">
+                                <div class="px-4 py-3 border-b bg-gray-50">
+                                    <div class="text-xs text-gray-500 mb-2">Cambiar empresa activa</div>
+                                    <input x-model="search" type="text" placeholder="Filtrar empresas..."
+                                           class="w-full border rounded-lg px-3 py-1.5 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+                                </div>
+                                <div class="max-h-64 overflow-y-auto py-1">
+                                    @foreach($userEmpresas as $emp)
+                                        <form method="POST" action="{{ route('empresa.set') }}" class="contents"
+                                              x-show="!search || '{{ strtolower($emp->nombre) }}'.includes(search.toLowerCase())">
+                                            @csrf
+                                            <input type="hidden" name="empresa_id" value="{{ $emp->id }}">
+                                            <button type="submit" class="w-full text-left px-4 py-2.5 text-sm hover:bg-gray-50 flex items-center gap-2 {{ $emp->id == $empresaId ? 'bg-primary-50 text-primary-700 font-medium' : 'text-gray-700' }}">
+                                                @if($emp->id == $empresaId)
+                                                    <svg class="w-4 h-4 text-primary-600 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                                                    </svg>
+                                                @else
+                                                    <span class="w-4 flex-shrink-0"></span>
+                                                @endif
+                                                <span class="truncate">{{ $emp->nombre }}</span>
+                                            </button>
+                                        </form>
+                                    @endforeach
+                                </div>
+                            </div>
+                        </div>
+                    @elseif($userEmpresas->count() > 1)
+                        {{-- Normal role: simple switcher (changes scoping) --}}
                         <div class="relative" x-data="{ open: false }">
                             <button @click="open = !open" class="hidden sm:flex items-center gap-2 text-sm text-gray-600 hover:text-primary-600 transition px-3 py-2 rounded-lg hover:bg-gray-50">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -336,14 +399,101 @@
                     </div>
                 @endif
                 @yield('content')
+                {{ $slot ?? '' }}
             </main>
 
             <!-- Footer -->
-            <footer class="bg-white border-t px-6 py-3 text-center text-xs text-gray-500">
-                Desarrollado por <a href="https://iados.mx" class="text-primary-600 hover:underline">iaDoS.mx</a> ·
-                <a href="https://wa.me/528318989580" class="text-primary-600 hover:underline">WhatsApp: 8318989580</a>
+            <footer class="bg-white border-t px-6 py-3 text-center text-xs text-gray-500 flex items-center justify-center gap-3">
+                <span>Desarrollado por <a href="https://iados.mx" class="text-primary-600 hover:underline">iaDoS.mx</a> ·
+                <a href="https://wa.me/528318989580" class="text-primary-600 hover:underline">WhatsApp: 8318989580</a></span>
+                {{-- Push notification toggle --}}
+                <button id="btn-push-toggle" onclick="togglePushNotifications()" class="hidden ml-2 px-2 py-1 rounded text-xs border hover:bg-gray-50 transition" title="Activar notificaciones push">
+                    <span id="push-label">Activar notificaciones</span>
+                </button>
             </footer>
         </div>
     </div>
+
+    {{-- Service Worker + Push registration --}}
+    <script>
+    (function() {
+        if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
+
+        navigator.serviceWorker.register('/sw.js').then(function(reg) {
+            // Mostrar boton push
+            var btn = document.getElementById('btn-push-toggle');
+            if (btn) btn.classList.remove('hidden');
+
+            // Checar estado actual
+            reg.pushManager.getSubscription().then(function(sub) {
+                updatePushButton(!!sub);
+            });
+        });
+
+        window.togglePushNotifications = async function() {
+            var reg = await navigator.serviceWorker.ready;
+            var sub = await reg.pushManager.getSubscription();
+
+            if (sub) {
+                // Desuscribir
+                await fetch('/ops/push/unsubscribe', {
+                    method: 'POST',
+                    headers: {'Content-Type':'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]')?.content || ''},
+                    body: JSON.stringify({endpoint: sub.endpoint})
+                });
+                await sub.unsubscribe();
+                updatePushButton(false);
+            } else {
+                // Suscribir
+                var res = await fetch('/ops/push/vapid-public-key');
+                var data = await res.json();
+                if (!data.key) { alert('VAPID key no configurada.'); return; }
+
+                var vapidKey = urlBase64ToUint8Array(data.key);
+                try {
+                    var newSub = await reg.pushManager.subscribe({
+                        userVisibleOnly: true,
+                        applicationServerKey: vapidKey
+                    });
+                    var json = newSub.toJSON();
+                    await fetch('/ops/push/subscribe', {
+                        method: 'POST',
+                        headers: {'Content-Type':'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]')?.content || ''},
+                        body: JSON.stringify({
+                            endpoint: json.endpoint,
+                            keys: json.keys,
+                            content_encoding: (PushManager.supportedContentEncodings || ['aesgcm'])[0]
+                        })
+                    });
+                    updatePushButton(true);
+                } catch(e) {
+                    if (Notification.permission === 'denied') {
+                        alert('Permisos de notificacion denegados. Habilitalos en la configuracion del navegador.');
+                    }
+                }
+            }
+        };
+
+        function updatePushButton(active) {
+            var label = document.getElementById('push-label');
+            if (label) label.textContent = active ? 'Notificaciones ON' : 'Activar notificaciones';
+            var btn = document.getElementById('btn-push-toggle');
+            if (btn) {
+                btn.classList.toggle('bg-green-50', active);
+                btn.classList.toggle('text-green-700', active);
+                btn.classList.toggle('border-green-200', active);
+            }
+        }
+
+        function urlBase64ToUint8Array(base64String) {
+            var padding = '='.repeat((4 - base64String.length % 4) % 4);
+            var base64 = (base64String + padding).replace(/\-/g, '+').replace(/_/g, '/');
+            var rawData = window.atob(base64);
+            var outputArray = new Uint8Array(rawData.length);
+            for (var i = 0; i < rawData.length; ++i) outputArray[i] = rawData.charCodeAt(i);
+            return outputArray;
+        }
+    })();
+    </script>
 </body>
 </html>

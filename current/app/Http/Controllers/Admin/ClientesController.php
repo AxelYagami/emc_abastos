@@ -3,18 +3,30 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Admin\Traits\AdminContext;
 use App\Models\Cliente;
+use App\Models\Empresa;
 use App\Models\Orden;
 use Illuminate\Http\Request;
 
 class ClientesController extends Controller
 {
+    use AdminContext;
+
     public function index(Request $request)
     {
-        $empresaId = (int) $request->session()->get('empresa_id');
+        $empresaId = $this->resolveEmpresaId($request);
         $search = trim((string)$request->get('q',''));
 
-        $q = Cliente::where('empresa_id',$empresaId)->orderByDesc('id');
+        $q = Cliente::orderByDesc('id');
+
+        // Superadmin: show all or filter by empresa
+        if ($this->isSuperAdmin() && !$request->filled('empresa_id')) {
+            $q->with('empresa');
+        } else {
+            $q->where('empresa_id', $empresaId);
+        }
+
         if ($search !== '') {
             $s = mb_substr(preg_replace('/[%_]+/u',' ', $search), 0, 80);
             $q->where(function($qq) use ($s) {
@@ -25,7 +37,9 @@ class ClientesController extends Controller
         }
 
         $clientes = $q->paginate(20)->withQueryString();
-        return view('admin.clientes.index', compact('clientes','search'));
+        $empresas = $this->getEmpresasForUser();
+
+        return view('admin.clientes.index', compact('clientes','search','empresas','empresaId'));
     }
 
     public function create(Request $request)
@@ -35,7 +49,7 @@ class ClientesController extends Controller
 
     public function store(Request $request)
     {
-        $empresaId = (int) $request->session()->get('empresa_id');
+        $empresaId = $this->resolveEmpresaId($request);
 
         $data = $request->validate([
             'nombre' => ['required', 'string', 'max:200'],
@@ -61,7 +75,7 @@ class ClientesController extends Controller
 
     public function show(Request $request, int $id)
     {
-        $empresaId = (int) $request->session()->get('empresa_id');
+        $empresaId = $this->resolveEmpresaId($request);
         $cliente = Cliente::where('empresa_id',$empresaId)->findOrFail($id);
         $ordenes = Orden::where('empresa_id',$empresaId)->where('cliente_id',$cliente->id)->orderByDesc('id')->limit(50)->get();
         return view('admin.clientes.show', compact('cliente','ordenes'));
@@ -69,14 +83,14 @@ class ClientesController extends Controller
 
     public function edit(Request $request, int $id)
     {
-        $empresaId = (int) $request->session()->get('empresa_id');
+        $empresaId = $this->resolveEmpresaId($request);
         $cliente = Cliente::where('empresa_id', $empresaId)->findOrFail($id);
         return view('admin.clientes.edit', compact('cliente'));
     }
 
     public function update(Request $request, int $id)
     {
-        $empresaId = (int) $request->session()->get('empresa_id');
+        $empresaId = $this->resolveEmpresaId($request);
         $cliente = Cliente::where('empresa_id', $empresaId)->findOrFail($id);
 
         $data = $request->validate([
@@ -101,7 +115,7 @@ class ClientesController extends Controller
 
     public function destroy(Request $request, int $id)
     {
-        $empresaId = (int) $request->session()->get('empresa_id');
+        $empresaId = $this->resolveEmpresaId($request);
         $cliente = Cliente::where('empresa_id', $empresaId)->findOrFail($id);
 
         // Check if cliente has orders
@@ -116,7 +130,7 @@ class ClientesController extends Controller
 
     public function toggle(Request $request, int $id)
     {
-        $empresaId = (int) $request->session()->get('empresa_id');
+        $empresaId = $this->resolveEmpresaId($request);
         $cliente = Cliente::where('empresa_id',$empresaId)->findOrFail($id);
         $cliente->enviar_estatus = !$cliente->enviar_estatus;
         $cliente->save();

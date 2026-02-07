@@ -16,6 +16,9 @@ class Theme extends Model
         'accent_color',
         'mode',
         'styles',
+        'typography',
+        'copy',
+        'banner_presets',
         'description',
         'is_default',
         'activo',
@@ -23,6 +26,9 @@ class Theme extends Model
 
     protected $casts = [
         'styles' => 'array',
+        'typography' => 'array',
+        'copy' => 'array',
+        'banner_presets' => 'array',
         'is_default' => 'boolean',
         'activo' => 'boolean',
     ];

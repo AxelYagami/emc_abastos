@@ -27,8 +27,14 @@ use App\Http\Controllers\Admin\PortalConfigController;
 use App\Http\Controllers\Admin\StoreDomainsController;
 use App\Http\Controllers\Admin\StorePromotionsController;
 
+// Home redirect (configurable via PortalConfig)
+Route::get('/', function () {
+    $path = \App\Models\PortalConfig::get('home_redirect_path', 'portal');
+    return redirect('/' . ltrim($path, '/'));
+})->name('home.redirect');
+
 // Storefront (main domain)
-Route::get('/', [StoreController::class, 'index'])->name('store.home');
+Route::get('/portal', [StoreController::class, 'index'])->name('store.home');
 Route::get('/producto/{producto}', [StoreController::class, 'show'])->name('store.producto');
 
 // Cart
@@ -68,8 +74,10 @@ Route::get('/password/reset/{token}', [PasswordResetController::class, 'showRese
 Route::post('/password/reset', [PasswordResetController::class, 'reset'])->name('password.update');
 
 // Empresa Switch
-Route::get('/empresa', [HomeController::class, 'empresa'])->name('empresa.switch');
-Route::post('/empresa', [HomeController::class, 'empresaSet'])->name('empresa.set');
+Route::get('/empresa', function () {
+    return redirect()->route(auth()->check() ? 'admin.dashboard' : 'login');
+})->name('empresa.switch');
+Route::post('/empresa', [HomeController::class, 'empresaSet'])->middleware('auth')->name('empresa.set');
 
 // Storefront by Handle (fallback URL: /t/{handle})
 Route::prefix('t/{handle}')->middleware('store.resolve')->group(function () {
@@ -90,16 +98,26 @@ Route::get('/dashboard', function () {
 })->middleware(['auth', 'empresa'])->name('dashboard');
 
 // Ops Routes
-Route::prefix('ops')->name('ops.')->middleware(['auth', 'empresa', 'role:operaciones,admin_empresa,superadmin'])->group(function () {
+Route::prefix('ops')->name('ops.')->middleware(['auth', 'empresa', 'role:operaciones,admin_empresa,cajero,repartidor,superadmin'])->group(function () {
     Route::get('/', [OpsHubController::class, 'index'])->name('hub');
     Route::get('ordenes', [OrdenesController::class, 'index'])->name('ordenes.index');
     Route::get('ordenes/hoy', [OrdenesController::class, 'hoy'])->name('ordenes.hoy');
     Route::get('ordenes/{id}', [OrdenesController::class, 'show'])->name('ordenes.show');
     Route::post('ordenes/{id}/status', [OrdenesController::class, 'updateStatus'])->name('ordenes.updateStatus');
+    Route::post('ordenes/{id}/pagos', [OrdenesController::class, 'storePago'])->name('pagos.store');
     Route::get('whatsapp', [WhatsAppRetryController::class, 'index'])->name('whatsapp.index');
     Route::post('whatsapp/{logId}/retry', [WhatsAppRetryController::class, 'retry'])->name('whatsapp.retry');
     Route::post('whatsapp/orden/{ordenId}/retry-last', [WhatsAppRetryController::class, 'retryLast'])->name('whatsapp.retryLast');
     Route::post('whatsapp/orden/{ordenId}/optout', [WhatsAppRetryController::class, 'optout'])->name('whatsapp.optout');
+
+    // Ops Movil (Livewire)
+    Route::get('movil', \App\Livewire\OpsMovilIndex::class)->name('movil');
+    Route::get('movil/orden/{order}', \App\Livewire\OpsMovilShow::class)->name('movil.show');
+
+    // Push Notifications
+    Route::get('push/vapid-public-key', [\App\Http\Controllers\Ops\PushSubscriptionController::class, 'vapidPublicKey'])->name('push.vapid');
+    Route::post('push/subscribe', [\App\Http\Controllers\Ops\PushSubscriptionController::class, 'subscribe'])->name('push.subscribe');
+    Route::post('push/unsubscribe', [\App\Http\Controllers\Ops\PushSubscriptionController::class, 'unsubscribe'])->name('push.unsubscribe');
 });
 
 // Admin Routes
@@ -167,15 +185,34 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'empresa', 'role:adm
     Route::get('ayuda', [HelpController::class, 'index'])->name('ai.help');
     Route::post('ayuda/ask', [HelpController::class, 'ask'])->name('ai.ask');
 
-    // Import/Export
+    // Import/Export Hub
+    Route::get('import-export', [\App\Http\Controllers\Admin\ImportExportController::class, 'hub'])->name('import-export.hub');
+    Route::get('import-export/history', [\App\Http\Controllers\Admin\ImportExportController::class, 'history'])->name('import-export.history');
+
+    // Import/Export - Productos
     Route::get('import-export/productos', [\App\Http\Controllers\Admin\ImportExportController::class, 'productosIndex'])->name('import-export.productos');
     Route::get('import-export/productos/template', [\App\Http\Controllers\Admin\ImportExportController::class, 'productosTemplate'])->name('import-export.productos.template');
     Route::post('import-export/productos/preview', [\App\Http\Controllers\Admin\ImportExportController::class, 'productosPreview'])->name('import-export.productos.preview');
     Route::post('import-export/productos/import', [\App\Http\Controllers\Admin\ImportExportController::class, 'productosImport'])->name('import-export.productos.import');
     Route::get('import-export/productos/export', [\App\Http\Controllers\Admin\ImportExportController::class, 'productosExport'])->name('import-export.productos.export');
 
+    // Import/Export - Categorias
     Route::get('import-export/categorias', [\App\Http\Controllers\Admin\ImportExportController::class, 'categoriasIndex'])->name('import-export.categorias');
     Route::get('import-export/categorias/template', [\App\Http\Controllers\Admin\ImportExportController::class, 'categoriasTemplate'])->name('import-export.categorias.template');
     Route::post('import-export/categorias/import', [\App\Http\Controllers\Admin\ImportExportController::class, 'categoriasImport'])->name('import-export.categorias.import');
     Route::get('import-export/categorias/export', [\App\Http\Controllers\Admin\ImportExportController::class, 'categoriasExport'])->name('import-export.categorias.export');
+
+    // Import/Export - Clientes
+    Route::get('import-export/clientes', [\App\Http\Controllers\Admin\ImportExportController::class, 'clientesIndex'])->name('import-export.clientes');
+    Route::get('import-export/clientes/template', [\App\Http\Controllers\Admin\ImportExportController::class, 'clientesTemplate'])->name('import-export.clientes.template');
+    Route::post('import-export/clientes/preview', [\App\Http\Controllers\Admin\ImportExportController::class, 'clientesPreview'])->name('import-export.clientes.preview');
+    Route::post('import-export/clientes/import', [\App\Http\Controllers\Admin\ImportExportController::class, 'clientesImport'])->name('import-export.clientes.import');
+    Route::get('import-export/clientes/export', [\App\Http\Controllers\Admin\ImportExportController::class, 'clientesExport'])->name('import-export.clientes.export');
+
+    // Import/Export - Inventario
+    Route::get('import-export/inventario', [\App\Http\Controllers\Admin\ImportExportController::class, 'inventarioIndex'])->name('import-export.inventario');
+    Route::get('import-export/inventario/template', [\App\Http\Controllers\Admin\ImportExportController::class, 'inventarioTemplate'])->name('import-export.inventario.template');
+    Route::post('import-export/inventario/preview', [\App\Http\Controllers\Admin\ImportExportController::class, 'inventarioPreview'])->name('import-export.inventario.preview');
+    Route::post('import-export/inventario/import', [\App\Http\Controllers\Admin\ImportExportController::class, 'inventarioImport'])->name('import-export.inventario.import');
+    Route::get('import-export/inventario/export', [\App\Http\Controllers\Admin\ImportExportController::class, 'inventarioExport'])->name('import-export.inventario.export');
 });
