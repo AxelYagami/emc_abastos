@@ -37,29 +37,16 @@ class MercadoPagoService
             ];
         }
 
-        // Get base URL from current request or config
-        $baseUrl = request()->getSchemeAndHttpHost();
-        
-        // Ensure URLs are absolute with the correct base
-        if (!str_starts_with($successUrl, 'http')) {
-            $successUrl = $baseUrl . (str_starts_with($successUrl, '/') ? '' : '/') . $successUrl;
-        }
-        if (!str_starts_with($failureUrl, 'http')) {
-            $failureUrl = $baseUrl . (str_starts_with($failureUrl, '/') ? '' : '/') . $failureUrl;
-        }
-        if (!str_starts_with($pendingUrl, 'http')) {
-            $pendingUrl = $baseUrl . (str_starts_with($pendingUrl, '/') ? '' : '/') . $pendingUrl;
-        }
+        // Log the URLs received
+        \Log::info('MercadoPago: URLs received', [
+            'success' => $successUrl,
+            'failure' => $failureUrl,
+            'pending' => $pendingUrl,
+        ]);
 
         $payload = [
             'items' => $items,
             'external_reference' => $orden->folio,
-            'back_urls' => [
-                'success' => $successUrl,
-                'failure' => $failureUrl,
-                'pending' => $pendingUrl,
-            ],
-            'auto_return' => 'approved',
             'statement_descriptor' => substr($this->empresa->nombre ?? 'Tienda', 0, 22),
             'metadata' => [
                 'orden_id' => $orden->id,
@@ -68,9 +55,18 @@ class MercadoPagoService
             ],
         ];
 
-        // Add notification URL only if it's a valid absolute URL
-        $notificationUrl = $baseUrl . '/webhooks/mercadopago';
-        $payload['notification_url'] = $notificationUrl;
+        // Only add back_urls and auto_return if URLs are valid absolute URLs
+        if (filter_var($successUrl, FILTER_VALIDATE_URL) && 
+            filter_var($failureUrl, FILTER_VALIDATE_URL) && 
+            filter_var($pendingUrl, FILTER_VALIDATE_URL)) {
+            
+            $payload['back_urls'] = [
+                'success' => $successUrl,
+                'failure' => $failureUrl,
+                'pending' => $pendingUrl,
+            ];
+            $payload['auto_return'] = 'approved';
+        }
 
         // Add payer info if available
         if ($orden->cliente) {
@@ -78,18 +74,11 @@ class MercadoPagoService
                 'name' => $orden->cliente->nombre ?? 'Cliente',
                 'email' => $orden->cliente->email ?? 'cliente@ejemplo.com',
             ];
-            if ($orden->cliente->whatsapp) {
-                $payload['payer']['phone'] = [
-                    'number' => preg_replace('/\D/', '', $orden->cliente->whatsapp),
-                ];
-            }
         }
 
         \Log::info('MercadoPago: Creating preference', [
             'folio' => $orden->folio,
-            'back_urls' => $payload['back_urls'],
-            'items_count' => count($items),
-            'base_url' => $baseUrl,
+            'payload' => $payload,
         ]);
 
         $response = Http::withToken($this->accessToken)
