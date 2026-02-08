@@ -61,6 +61,15 @@ export default function DefaultHeader({ config, onOpenAssistant }) {
               </button>
             )}
 
+            {/* Login button */}
+            <a
+              href="/login"
+              className="hidden sm:flex items-center gap-2 px-4 py-2 bg-gray-900 text-white rounded-lg font-medium text-sm hover:bg-gray-800 transition-colors"
+              data-testid="header-login-btn"
+            >
+              Ingreso
+            </a>
+
             {/* Mobile menu */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -92,6 +101,13 @@ export default function DefaultHeader({ config, onOpenAssistant }) {
                   <span>{item.label}</span>
                 </Link>
               ))}
+              <hr className="my-2 border-gray-200" />
+              <a
+                href="/login"
+                className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-gray-50 rounded-lg font-medium"
+              >
+                Ingreso
+              </a>
             </div>
           </nav>
         )}
