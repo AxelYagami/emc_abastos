@@ -40,6 +40,7 @@ class ResolveStoreContext
             // Also set in session for backward compatibility
             session(['empresa_id' => $store->id]);
             session(['empresa_nombre' => $store->nombre]);
+            session(['store_handle' => $store->handle]);
 
             // Share with views
             view()->share('currentStore', $store);
