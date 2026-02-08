@@ -124,16 +124,24 @@
             <!-- Action Buttons -->
             <div class="flex flex-col sm:flex-row gap-4 justify-center">
                 @if(isset($orden))
-                    <a href="{{ route('store.track', $orden->folio) }}"
+                    @php
+                        $storeHandle = $orden->empresa?->handle ?? session('store_handle');
+                    @endphp
+                    <a href="{{ $storeHandle ? route('store.handle.home', ['handle' => $storeHandle]) . '/pedido/' . $orden->folio : route('store.track', $orden->folio) }}"
                        class="px-8 py-4 rounded-xl font-semibold text-white text-lg transition-all hover-lift"
                        style="background-color: var(--brand-primary);">
                         Ver estado del pedido
                     </a>
+                    <a href="{{ $storeHandle ? route('store.handle.home', ['handle' => $storeHandle]) : route('store.home') }}"
+                       class="px-8 py-4 border-2 border-slate-200 text-slate-700 rounded-xl hover:bg-slate-50 transition-all font-semibold text-lg">
+                        Seguir comprando
+                    </a>
+                @else
+                    <a href="{{ route('store.home') }}"
+                       class="px-8 py-4 border-2 border-slate-200 text-slate-700 rounded-xl hover:bg-slate-50 transition-all font-semibold text-lg">
+                        Seguir comprando
+                    </a>
                 @endif
-                <a href="{{ route('store.home') }}"
-                   class="px-8 py-4 border-2 border-slate-200 text-slate-700 rounded-xl hover:bg-slate-50 transition-all font-semibold text-lg">
-                    Seguir comprando
-                </a>
             </div>
         </div>
     </div>
