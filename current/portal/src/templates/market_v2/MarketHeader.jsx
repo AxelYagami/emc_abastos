@@ -115,10 +115,6 @@ export default function MarketHeader({ config, onOpenAssistant }) {
                   {item.label}
                 </Link>
               ))}
-              <hr className="my-2 border-gray-200" />
-              <a href="/login" className="flex items-center gap-3 px-3 py-3 text-gray-700 hover:bg-gray-50 rounded-lg font-medium text-sm">
-                Ingresar
-              </a>
             </nav>
           </div>
         )}
