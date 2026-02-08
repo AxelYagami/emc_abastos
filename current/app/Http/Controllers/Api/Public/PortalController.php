@@ -23,6 +23,7 @@ class PortalController extends Controller
                 'portal_name' => $config['portal_name'] ?? 'Central de Abastos',
                 'portal_tagline' => $config['portal_tagline'] ?? '',
                 'portal_description' => $config['portal_description'] ?? '',
+                'active_template' => $config['active_template'] ?? 'default',
                 'hero' => [
                     'title' => $config['hero_title'] ?? '',
                     'subtitle' => $config['hero_subtitle'] ?? '',
