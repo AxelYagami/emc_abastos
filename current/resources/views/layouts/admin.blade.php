@@ -1,6 +1,11 @@
 @php
     $empresaId = session('empresa_id');
     $empresa = $empresaId ? \App\Models\Empresa::find($empresaId) : null;
+    
+    // Sidebar: nombre interno (grande) + nombre comercial (pequeño)
+    $empresaNombreInterno = $empresa?->nombre ?? 'Sin empresa';
+    $empresaNombreComercial = $empresa?->brand_nombre_publico ?? $empresa?->getSetting('app_name') ?? null;
+    
     $appName = $empresa ? $empresa->getAppName() : 'Mercado De Abastos';
     $logoUrl = $empresa ? $empresa->getLogoUrl() : asset('storage/brand/logo-iados.png');
     $isSuperAdmin = auth()->user()?->isSuperAdmin() ?? false;
