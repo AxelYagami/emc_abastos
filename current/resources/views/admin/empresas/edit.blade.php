@@ -158,6 +158,77 @@
                     </div>
                 </div>
 
+                {{-- Storefront Template Selector --}}
+                <div class="mt-6 pt-6 border-t">
+                    <label class="block text-sm font-medium text-gray-700 mb-3">Plantilla de Tienda (Storefront)</label>
+                    @php
+                        $currentTemplate = $empresa->template_config['storefront_template'] ?? 'classic';
+                    @endphp
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {{-- Classic Template --}}
+                        <label class="relative cursor-pointer group">
+                            <input type="radio" name="storefront_template" value="classic" class="sr-only peer" 
+                                   {{ $currentTemplate === 'classic' ? 'checked' : '' }}>
+                            <div class="border-2 rounded-xl overflow-hidden peer-checked:border-primary-500 peer-checked:ring-2 peer-checked:ring-primary-200 hover:border-gray-300 transition-all">
+                                <div class="h-32 bg-gradient-to-br from-emerald-500 to-emerald-600 relative overflow-hidden">
+                                    <div class="absolute inset-4 bg-white/20 rounded-lg"></div>
+                                    <div class="absolute bottom-4 left-4 right-4 flex gap-2">
+                                        <div class="w-12 h-12 bg-white/30 rounded-lg"></div>
+                                        <div class="w-12 h-12 bg-white/30 rounded-lg"></div>
+                                        <div class="w-12 h-12 bg-white/30 rounded-lg"></div>
+                                    </div>
+                                </div>
+                                <div class="p-4">
+                                    <div class="flex items-center justify-between">
+                                        <div>
+                                            <h4 class="font-semibold text-gray-800">Classic</h4>
+                                            <p class="text-xs text-gray-500">Tradicional con hero y grid</p>
+                                        </div>
+                                        <div class="w-5 h-5 rounded-full border-2 peer-checked:bg-primary-500 peer-checked:border-primary-500 flex items-center justify-center">
+                                            <svg class="w-3 h-3 text-white hidden peer-checked:block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
+                                            </svg>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="absolute top-2 right-2 px-2 py-1 bg-primary-500 text-white text-xs font-bold rounded hidden peer-checked:block">
+                                Activo
+                            </div>
+                        </label>
+
+                        {{-- Modern Template --}}
+                        <label class="relative cursor-pointer group">
+                            <input type="radio" name="storefront_template" value="modern" class="sr-only peer" 
+                                   {{ $currentTemplate === 'modern' ? 'checked' : '' }}>
+                            <div class="border-2 rounded-xl overflow-hidden peer-checked:border-primary-500 peer-checked:ring-2 peer-checked:ring-primary-200 hover:border-gray-300 transition-all">
+                                <div class="h-32 bg-gradient-to-br from-slate-800 to-slate-900 relative overflow-hidden">
+                                    <div class="absolute top-4 left-4 w-24 h-16 bg-white/10 rounded-lg backdrop-blur"></div>
+                                    <div class="absolute top-4 right-4 w-20 h-20 bg-gradient-to-br from-emerald-400/30 to-blue-400/30 rounded-xl"></div>
+                                    <div class="absolute bottom-4 left-4 w-16 h-6 bg-emerald-500/50 rounded-full"></div>
+                                </div>
+                                <div class="p-4">
+                                    <div class="flex items-center justify-between">
+                                        <div>
+                                            <h4 class="font-semibold text-gray-800">Modern</h4>
+                                            <p class="text-xs text-gray-500">Sidebar + glassmorphism</p>
+                                        </div>
+                                        <div class="w-5 h-5 rounded-full border-2 peer-checked:bg-primary-500 peer-checked:border-primary-500 flex items-center justify-center">
+                                            <svg class="w-3 h-3 text-white hidden peer-checked:block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
+                                            </svg>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="absolute top-2 right-2 px-2 py-1 bg-primary-500 text-white text-xs font-bold rounded hidden peer-checked:block">
+                                Activo
+                            </div>
+                        </label>
+                    </div>
+                    <p class="text-xs text-gray-500 mt-2">Selecciona el diseno visual de la tienda publica de esta empresa</p>
+                </div>
+
                 <div class="flex items-center">
                     <input type="checkbox" name="activa" value="1" {{ $empresa->activa ? 'checked' : '' }} id="activa"
                            class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded">
