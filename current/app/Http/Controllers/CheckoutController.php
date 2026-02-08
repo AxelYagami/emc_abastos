@@ -178,11 +178,18 @@ class CheckoutController extends Controller
             try {
                 if (MercadoPagoService::isConfigured($empresaId)) {
                     $mpService = new MercadoPagoService($empresaId);
+                    
+                    // Force absolute URLs using the current request's host
+                    $baseUrl = $request->getSchemeAndHttpHost();
+                    $successUrl = $baseUrl . '/checkout/success/' . $orden->folio;
+                    $failureUrl = $baseUrl . '/checkout/failure/' . $orden->folio;
+                    $pendingUrl = $baseUrl . '/checkout/pending/' . $orden->folio;
+                    
                     $preference = $mpService->createPreference(
                         $orden,
-                        route('checkout.success', $orden->folio),
-                        route('checkout.failure', $orden->folio),
-                        route('checkout.pending', $orden->folio)
+                        $successUrl,
+                        $failureUrl,
+                        $pendingUrl
                     );
 
                     // Use sandbox URL for test credentials
