@@ -87,7 +87,6 @@ export default function App() {
             
             {/* Shared pages - same across all templates */}
             <Route path="/tiendas" element={<Stores config={config} />} />
-            <Route path="/productos" element={<Products config={config} />} />
             <Route path="/promos" element={<Promos config={config} />} />
           </Routes>
         </Suspense>
