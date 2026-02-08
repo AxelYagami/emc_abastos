@@ -100,7 +100,7 @@
         <!-- Flyer Section -->
         <div class="bg-white rounded-lg shadow p-6">
             <div class="flex items-center justify-between mb-4">
-                <h2 class="text-lg font-semibold text-gray-800">Flyer / Banner de Productos</h2>
+                <h2 class="text-lg font-semibold text-gray-800">Flyer / Banner de Productos Destacados</h2>
                 <label class="flex items-center gap-2 cursor-pointer">
                     <input type="checkbox" name="flyer_enabled" value="1"
                            {{ ($config['flyer_enabled'] ?? true) ? 'checked' : '' }}
@@ -120,10 +120,11 @@
                            class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500">
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Cantidad de productos (si aleatorio)</label>
-                    <input type="number" name="flyer_product_count" value="{{ $config['flyer_product_count'] ?? 6 }}"
-                           min="1" max="12"
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Maximo productos por tienda</label>
+                    <input type="number" name="flyer_max_per_store" value="{{ $config['flyer_max_per_store'] ?? 5 }}"
+                           min="1" max="10"
                            class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500">
+                    <p class="text-xs text-gray-500 mt-1">Cada tienda puede marcar hasta este numero de productos como destacados</p>
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Color de fondo (opcional)</label>
@@ -134,24 +135,77 @@
                             <input type="checkbox" id="flyer_no_color" {{ empty($config['flyer_accent_color']) ? 'checked' : '' }}
                                    class="w-4 h-4 text-primary-600 rounded"
                                    onchange="document.getElementById('flyer_color_picker').disabled = this.checked; if(this.checked) document.getElementById('flyer_color_picker').value = '';">
-                            <span class="text-sm text-gray-600">Sin color (fondo neutro con animacion)</span>
+                            <span class="text-sm text-gray-600">Sin color (fondo neutro)</span>
                         </label>
                     </div>
-                    <p class="text-xs text-gray-500 mt-1">Deja sin color para un diseño minimalista y profesional</p>
                 </div>
                 <div class="md:col-span-2">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Productos especificos (opcional)</label>
-                    <p class="text-xs text-gray-500 mb-2">Si no seleccionas ninguno, se mostraran productos aleatorios</p>
-                    <select name="flyer_product_ids[]" multiple
-                            class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500"
-                            style="height: 150px;">
-                        @foreach($productos as $p)
-                            <option value="{{ $p->id }}" {{ in_array($p->id, $flyerProductIds ?? []) ? 'selected' : '' }}>
-                                {{ $p->nombre }} ({{ $p->empresa->nombre ?? 'Sin tienda' }})
-                            </option>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Productos Destacados</label>
+                    <p class="text-xs text-gray-500 mb-3">Selecciona los productos que apareceran en el flyer del portal. Maximo {{ $config['flyer_max_per_store'] ?? 5 }} por tienda.</p>
+                    
+                    @php
+                        $productosPorEmpresa = $productos->groupBy('empresa_id');
+                        $selectedIds = $flyerProductIds ?? [];
+                    @endphp
+                    
+                    <div class="border rounded-lg divide-y max-h-96 overflow-y-auto" x-data="{ 
+                        selected: {{ json_encode($selectedIds) }},
+                        maxPerStore: {{ $config['flyer_max_per_store'] ?? 5 }},
+                        countByStore: {},
+                        init() {
+                            this.updateCounts();
+                        },
+                        updateCounts() {
+                            this.countByStore = {};
+                            document.querySelectorAll('[data-empresa-id]').forEach(cb => {
+                                if (cb.checked) {
+                                    const empId = cb.dataset.empresaId;
+                                    this.countByStore[empId] = (this.countByStore[empId] || 0) + 1;
+                                }
+                            });
+                        },
+                        canSelect(empresaId, isChecked) {
+                            if (!isChecked) return true;
+                            const current = this.countByStore[empresaId] || 0;
+                            return current < this.maxPerStore;
+                        }
+                    }">
+                        @foreach($empresas as $empresa)
+                            @php $empresaProductos = $productosPorEmpresa->get($empresa->id, collect()); @endphp
+                            @if($empresaProductos->count() > 0)
+                            <div class="p-3">
+                                <div class="flex items-center justify-between mb-2">
+                                    <span class="font-medium text-gray-800">{{ $empresa->nombre }}</span>
+                                    <span class="text-xs px-2 py-1 rounded-full" 
+                                          :class="(countByStore[{{ $empresa->id }}] || 0) >= maxPerStore ? 'bg-amber-100 text-amber-700' : 'bg-gray-100 text-gray-600'"
+                                          x-text="(countByStore[{{ $empresa->id }}] || 0) + '/' + maxPerStore + ' seleccionados'">
+                                    </span>
+                                </div>
+                                <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                                    @foreach($empresaProductos as $p)
+                                    <label class="flex items-center gap-2 p-2 hover:bg-gray-50 rounded cursor-pointer text-sm">
+                                        <input type="checkbox" 
+                                               name="flyer_product_ids[]" 
+                                               value="{{ $p->id }}"
+                                               data-empresa-id="{{ $empresa->id }}"
+                                               {{ in_array($p->id, $selectedIds) ? 'checked' : '' }}
+                                               @change="
+                                                   if ($event.target.checked && !canSelect({{ $empresa->id }}, true)) {
+                                                       $event.target.checked = false;
+                                                       alert('Maximo ' + maxPerStore + ' productos por tienda');
+                                                       return;
+                                                   }
+                                                   updateCounts();
+                                               "
+                                               class="w-4 h-4 text-primary-600 rounded">
+                                        <span class="truncate text-gray-700">{{ $p->nombre }}</span>
+                                    </label>
+                                    @endforeach
+                                </div>
+                            </div>
+                            @endif
                         @endforeach
-                    </select>
-                    <p class="text-xs text-gray-400 mt-1">Ctrl+click para seleccionar multiples</p>
+                    </div>
                 </div>
             </div>
         </div>
