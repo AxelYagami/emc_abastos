@@ -185,11 +185,25 @@ class CheckoutController extends Controller
                         route('checkout.pending', $orden->folio)
                     );
 
-                    return redirect($preference['init_point']);
+                    // Use sandbox URL for test credentials
+                    $redirectUrl = $preference['init_point'];
+                    if (!empty($preference['sandbox_init_point']) && str_contains($empresa->getMpAccessToken(), 'TEST')) {
+                        $redirectUrl = $preference['sandbox_init_point'];
+                    }
+
+                    return redirect($redirectUrl);
+                } else {
+                    \Log::warning('MercadoPago not configured for empresa', ['empresa_id' => $empresaId]);
                 }
             } catch (\Exception $e) {
                 // Log error but continue to thanks page
-                \Log::error('MercadoPago error', ['error' => $e->getMessage()]);
+                \Log::error('MercadoPago error', [
+                    'error' => $e->getMessage(),
+                    'trace' => $e->getTraceAsString(),
+                    'empresa_id' => $empresaId,
+                ]);
+                // Show error to user in session
+                session()->flash('mp_error', 'Error al procesar pago: ' . $e->getMessage());
             }
         }
 
