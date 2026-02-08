@@ -212,7 +212,7 @@ class CheckoutController extends Controller
 
     public function success(string $folio)
     {
-        $orden = Orden::where('folio', $folio)->firstOrFail();
+        $orden = Orden::with('empresa')->where('folio', $folio)->firstOrFail();
         return view('store.thanks', [
             'orden' => $orden,
             'status' => 'success',
@@ -222,7 +222,7 @@ class CheckoutController extends Controller
 
     public function failure(string $folio)
     {
-        $orden = Orden::where('folio', $folio)->firstOrFail();
+        $orden = Orden::with('empresa')->where('folio', $folio)->firstOrFail();
         return view('store.thanks', [
             'orden' => $orden,
             'status' => 'failure',
@@ -232,7 +232,7 @@ class CheckoutController extends Controller
 
     public function pending(string $folio)
     {
-        $orden = Orden::where('folio', $folio)->firstOrFail();
+        $orden = Orden::with('empresa')->where('folio', $folio)->firstOrFail();
         return view('store.thanks', [
             'orden' => $orden,
             'status' => 'pending',
