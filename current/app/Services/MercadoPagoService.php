@@ -37,10 +37,19 @@ class MercadoPagoService
             ];
         }
 
-        // Ensure URLs are absolute
-        $successUrl = url($successUrl);
-        $failureUrl = url($failureUrl);
-        $pendingUrl = url($pendingUrl);
+        // Get base URL from current request or config
+        $baseUrl = request()->getSchemeAndHttpHost();
+        
+        // Ensure URLs are absolute with the correct base
+        if (!str_starts_with($successUrl, 'http')) {
+            $successUrl = $baseUrl . (str_starts_with($successUrl, '/') ? '' : '/') . $successUrl;
+        }
+        if (!str_starts_with($failureUrl, 'http')) {
+            $failureUrl = $baseUrl . (str_starts_with($failureUrl, '/') ? '' : '/') . $failureUrl;
+        }
+        if (!str_starts_with($pendingUrl, 'http')) {
+            $pendingUrl = $baseUrl . (str_starts_with($pendingUrl, '/') ? '' : '/') . $pendingUrl;
+        }
 
         $payload = [
             'items' => $items,
@@ -60,10 +69,8 @@ class MercadoPagoService
         ];
 
         // Add notification URL only if it's a valid absolute URL
-        $notificationUrl = route('webhooks.mercadopago');
-        if (filter_var($notificationUrl, FILTER_VALIDATE_URL)) {
-            $payload['notification_url'] = $notificationUrl;
-        }
+        $notificationUrl = $baseUrl . '/webhooks/mercadopago';
+        $payload['notification_url'] = $notificationUrl;
 
         // Add payer info if available
         if ($orden->cliente) {
@@ -82,6 +89,7 @@ class MercadoPagoService
             'folio' => $orden->folio,
             'back_urls' => $payload['back_urls'],
             'items_count' => count($items),
+            'base_url' => $baseUrl,
         ]);
 
         $response = Http::withToken($this->accessToken)
