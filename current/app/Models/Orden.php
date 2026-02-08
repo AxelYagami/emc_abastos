@@ -52,7 +52,11 @@ class Orden extends Model
 
     public function getTotal(): float
     {
-        return $this->items->sum(fn($item) => $item->cantidad * $item->precio_unitario);
+        // Use 'total' column from orden if available, else calculate from items
+        if ($this->total) {
+            return (float) $this->total;
+        }
+        return $this->items->sum(fn($item) => $item->cantidad * $item->precio);
     }
 
     public function isPaid(): bool
