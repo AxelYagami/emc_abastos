@@ -1,6 +1,9 @@
 @php
-    $empresaId = session('empresa_id');
-    $empresa = $empresaId ? \App\Models\Empresa::with('theme')->find($empresaId) : null;
+    // Use currentStore from middleware if available, otherwise fallback to session
+    $empresa = $currentStore ?? (session('empresa_id') ? \App\Models\Empresa::with('theme')->find(session('empresa_id')) : null);
+    $empresaId = $empresa?->id;
+    
+    // Create fresh ThemeResolver (no cache for storefront views)
     $themeResolver = new \App\Services\ThemeResolver($empresa);
 
     $appName = $empresa ? $empresa->getAppName() : 'Mercado De Abastos';
