@@ -38,6 +38,8 @@ class EmpresasController extends Controller
             'logo' => 'nullable|image|max:2048',
             'descripcion' => 'nullable|string|max:500',
             'tags' => 'nullable|string|max:200',
+            // Storefront template
+            'storefront_template' => 'nullable|string|in:classic,modern',
             // Settings
             'app_name' => 'nullable|string|max:200',
             'primary_color' => 'nullable|string|max:20',
@@ -88,6 +90,11 @@ class EmpresasController extends Controller
             $tags = array_filter($tags);
         }
 
+        // Build template_config
+        $templateConfig = [
+            'storefront_template' => $data['storefront_template'] ?? 'classic',
+        ];
+
         $empresa = Empresa::create([
             'nombre' => $data['nombre'],
             'slug' => $slug,
@@ -99,6 +106,7 @@ class EmpresasController extends Controller
             'activa' => $data['activa'] ?? true,
             'theme_id' => $data['theme_id'] ?? null,
             'settings' => array_filter($settings),
+            'template_config' => $templateConfig,
             'descripcion' => $data['descripcion'] ?? null,
             'tags' => !empty($tags) ? $tags : null,
             'hora_atencion_inicio' => $data['hora_atencion_inicio'] ?? '08:00',
