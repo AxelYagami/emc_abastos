@@ -173,6 +173,9 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'empresa', 'role:adm
 
     Route::resource('whatsapp', WhatsAppController::class)->only(['index', 'create', 'store', 'destroy']);
     Route::post('whatsapp/{id}/toggle', [WhatsAppController::class, 'toggle'])->name('whatsapp.toggle');
+    Route::post('whatsapp/config', [WhatsAppController::class, 'updateConfig'])->name('whatsapp.config.update');
+    Route::post('whatsapp/{id}/retry', [WhatsAppController::class, 'retry'])->name('whatsapp.retry');
+    Route::post('whatsapp/test', [WhatsAppController::class, 'test'])->name('whatsapp.test');
     Route::get('inventarios', [InventariosController::class, 'index'])->name('inventarios.index');
     Route::get('inventarios/{productoId}/kardex', [InventariosController::class, 'kardex'])->name('inventarios.kardex');
     Route::post('inventarios/{productoId}/ajustar', [InventariosController::class, 'ajustar'])->name('inventarios.ajustar');
