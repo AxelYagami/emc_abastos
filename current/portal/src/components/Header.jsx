@@ -103,6 +103,15 @@ export default function Header({ config, onOpenAssistant }) {
               </button>
             )}
 
+            {/* Login button - Ingreso */}
+            <a
+              href="/login"
+              className="hidden sm:flex items-center gap-2 px-4 py-2 bg-gray-900 text-white rounded-lg font-medium text-sm hover:bg-gray-800 transition-colors"
+              data-testid="header-login-btn"
+            >
+              Ingreso
+            </a>
+
             {/* Mobile menu button */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
