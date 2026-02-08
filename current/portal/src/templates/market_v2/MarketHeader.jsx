@@ -32,9 +32,6 @@ export default function MarketHeader({ config, onOpenAssistant }) {
                 <span className="hidden sm:inline">Ayuda IA</span>
               </button>
             )}
-            <a href="/login" className="hover:text-white transition-colors">
-              Ingresar
-            </a>
           </div>
         </div>
       </div>
