@@ -13,6 +13,14 @@
         @endphp
 
         <div class="bg-white rounded-2xl shadow-premium p-8 lg:p-12 text-center">
+            {{-- MP Error Alert --}}
+            @if(session('mp_error'))
+            <div class="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl text-left">
+                <p class="text-red-700 font-medium text-sm">Error de MercadoPago:</p>
+                <p class="text-red-600 text-xs mt-1">{{ session('mp_error') }}</p>
+            </div>
+            @endif
+
             <!-- Status Icon -->
             <div class="w-24 h-24 {{ $config['bg'] }} rounded-full flex items-center justify-center mx-auto mb-8">
                 @if(($status ?? 'success') === 'success')
