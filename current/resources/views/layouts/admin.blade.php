@@ -64,7 +64,7 @@
             <div class="p-4 border-b border-primary-700/50">
                 <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-3">
                     @if($logoUrl)
-                        <img src="{{ $logoUrl }}" alt="{{ $appName }}" class="w-10 h-10 rounded-lg object-cover flex-shrink-0">
+                        <img src="{{ $logoUrl }}" alt="{{ $empresaNombreInterno }}" class="w-10 h-10 rounded-lg object-cover flex-shrink-0">
                     @else
                         <div class="w-10 h-10 bg-white rounded-lg flex items-center justify-center flex-shrink-0">
                             <svg class="w-6 h-6 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -72,9 +72,11 @@
                             </svg>
                         </div>
                     @endif
-                    <span class="text-lg font-bold truncate" x-show="sidebarOpen">{{ Str::limit($appName, 18) }}</span>
+                    <span class="text-lg font-bold truncate" x-show="sidebarOpen">{{ Str::limit($empresaNombreInterno, 18) }}</span>
                 </a>
-                <div class="text-xs text-primary-200 mt-2 truncate" x-show="sidebarOpen">{{ session('empresa_nombre') ?? '—' }}</div>
+                @if($empresaNombreComercial)
+                <div class="text-xs text-primary-200 mt-1 truncate" x-show="sidebarOpen">{{ $empresaNombreComercial }}</div>
+                @endif
             </div>
 
             <nav class="p-3 space-y-1 text-sm overflow-y-auto flex-1">
