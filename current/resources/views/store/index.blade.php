@@ -6,7 +6,7 @@
         $storefrontTemplate = $currentStore?->template_config['storefront_template'] ?? 'classic';
         
         // Validate template exists, fallback to classic
-        $validTemplates = ['classic', 'modern'];
+        $validTemplates = ['classic', 'modern', 'minimal', 'bold'];
         if (!in_array($storefrontTemplate, $validTemplates)) {
             $storefrontTemplate = 'classic';
         }
