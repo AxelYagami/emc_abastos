@@ -43,7 +43,7 @@ export default function AIAssistant({ isOpen, onClose, config }) {
     }
 
     if (q.includes('tienda') || q.includes('proveedor')) {
-      return 'Tenemos varias tiendas disponibles en el directorio. Cada una ofrece productos frescos del mercado de abastos.\n\nVisita la seccion "Tiendas" para ver el catalogo completo y elegir tu proveedor favorito.'
+      return 'Tenemos varias tiendas disponibles en el directorio. Cada una ofrece productos frescos del mercado de abastos.\n\nVisita la seccion "Tiendas" para ver todas las opciones y elegir tu proveedor favorito.'
     }
 
     if (q.includes('comprar') || q.includes('pedir') || q.includes('ordenar')) {
