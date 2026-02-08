@@ -39,7 +39,7 @@ class EmpresasController extends Controller
             'descripcion' => 'nullable|string|max:500',
             'tags' => 'nullable|string|max:200',
             // Storefront template
-            'storefront_template' => 'nullable|string|in:classic,modern',
+            'storefront_template' => 'nullable|string|in:classic,modern,minimal,bold',
             // Settings
             'app_name' => 'nullable|string|max:200',
             'primary_color' => 'nullable|string|max:20',
@@ -151,7 +151,7 @@ class EmpresasController extends Controller
             'tags' => 'nullable|string|max:200',
             'is_featured' => 'boolean',
             // Storefront template
-            'storefront_template' => 'nullable|string|in:classic,modern',
+            'storefront_template' => 'nullable|string|in:classic,modern,minimal,bold',
             // Settings
             'app_name' => 'nullable|string|max:200',
             'primary_color' => 'nullable|string|max:20',
