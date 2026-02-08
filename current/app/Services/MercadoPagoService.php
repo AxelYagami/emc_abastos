@@ -67,6 +67,10 @@ class MercadoPagoService
         }
 
         $response = Http::withToken($this->accessToken)
+            ->withOptions([
+                'verify' => false, // Disable SSL verification for development
+            ])
+            ->timeout(30)
             ->post("{$this->baseUrl}/checkout/preferences", $payload);
 
         if (!$response->successful()) {
