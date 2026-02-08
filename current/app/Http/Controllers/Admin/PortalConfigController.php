@@ -99,8 +99,8 @@ class PortalConfigController extends Controller
         if ($request->has('promos_per_store')) {
             PortalConfig::set('promos_per_store', (int)$request->input('promos_per_store'), 'integer');
         }
-        if ($request->has('flyer_product_count')) {
-            PortalConfig::set('flyer_product_count', (int)$request->input('flyer_product_count'), 'integer');
+        if ($request->has('flyer_max_per_store')) {
+            PortalConfig::set('flyer_max_per_store', (int)$request->input('flyer_max_per_store'), 'integer');
         }
 
         // Handle boolean types
