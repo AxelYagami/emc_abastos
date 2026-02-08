@@ -127,7 +127,7 @@
                     @php
                         $storeHandle = $orden->empresa?->handle ?? session('store_handle');
                     @endphp
-                    <a href="{{ $storeHandle ? route('store.handle.home', ['handle' => $storeHandle]) . '/pedido/' . $orden->folio : route('store.track', $orden->folio) }}"
+                    <a href="{{ route('store.track', $orden->folio) }}"
                        class="px-8 py-4 rounded-xl font-semibold text-white text-lg transition-all hover-lift"
                        style="background-color: var(--brand-primary);">
                         Ver estado del pedido
