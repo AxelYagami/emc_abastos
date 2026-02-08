@@ -164,36 +164,27 @@
                     @php
                         $currentTemplate = $empresa->template_config['storefront_template'] ?? 'classic';
                     @endphp
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
                         {{-- Classic Template --}}
                         <label class="relative cursor-pointer group">
                             <input type="radio" name="storefront_template" value="classic" class="sr-only peer" 
                                    {{ $currentTemplate === 'classic' ? 'checked' : '' }}>
                             <div class="border-2 rounded-xl overflow-hidden peer-checked:border-primary-500 peer-checked:ring-2 peer-checked:ring-primary-200 hover:border-gray-300 transition-all">
-                                <div class="h-32 bg-gradient-to-br from-emerald-500 to-emerald-600 relative overflow-hidden">
-                                    <div class="absolute inset-4 bg-white/20 rounded-lg"></div>
-                                    <div class="absolute bottom-4 left-4 right-4 flex gap-2">
-                                        <div class="w-12 h-12 bg-white/30 rounded-lg"></div>
-                                        <div class="w-12 h-12 bg-white/30 rounded-lg"></div>
-                                        <div class="w-12 h-12 bg-white/30 rounded-lg"></div>
+                                <div class="h-24 bg-gradient-to-br from-emerald-500 to-emerald-600 relative overflow-hidden">
+                                    <div class="absolute inset-3 bg-white/20 rounded"></div>
+                                    <div class="absolute bottom-2 left-3 right-3 flex gap-1">
+                                        <div class="w-6 h-6 bg-white/30 rounded"></div>
+                                        <div class="w-6 h-6 bg-white/30 rounded"></div>
+                                        <div class="w-6 h-6 bg-white/30 rounded"></div>
                                     </div>
                                 </div>
-                                <div class="p-4">
-                                    <div class="flex items-center justify-between">
-                                        <div>
-                                            <h4 class="font-semibold text-gray-800">Classic</h4>
-                                            <p class="text-xs text-gray-500">Tradicional con hero y grid</p>
-                                        </div>
-                                        <div class="w-5 h-5 rounded-full border-2 peer-checked:bg-primary-500 peer-checked:border-primary-500 flex items-center justify-center">
-                                            <svg class="w-3 h-3 text-white hidden peer-checked:block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
-                                            </svg>
-                                        </div>
-                                    </div>
+                                <div class="p-3">
+                                    <h4 class="font-semibold text-gray-800 text-sm">Classic</h4>
+                                    <p class="text-xs text-gray-500">Hero + Grid tradicional</p>
                                 </div>
                             </div>
-                            <div class="absolute top-2 right-2 px-2 py-1 bg-primary-500 text-white text-xs font-bold rounded hidden peer-checked:block">
-                                Activo
+                            <div class="absolute top-1 right-1 px-1.5 py-0.5 bg-primary-500 text-white text-[10px] font-bold rounded hidden peer-checked:block">
+                                ✓
                             </div>
                         </label>
 
@@ -202,31 +193,69 @@
                             <input type="radio" name="storefront_template" value="modern" class="sr-only peer" 
                                    {{ $currentTemplate === 'modern' ? 'checked' : '' }}>
                             <div class="border-2 rounded-xl overflow-hidden peer-checked:border-primary-500 peer-checked:ring-2 peer-checked:ring-primary-200 hover:border-gray-300 transition-all">
-                                <div class="h-32 bg-gradient-to-br from-slate-800 to-slate-900 relative overflow-hidden">
-                                    <div class="absolute top-4 left-4 w-24 h-16 bg-white/10 rounded-lg backdrop-blur"></div>
-                                    <div class="absolute top-4 right-4 w-20 h-20 bg-gradient-to-br from-emerald-400/30 to-blue-400/30 rounded-xl"></div>
-                                    <div class="absolute bottom-4 left-4 w-16 h-6 bg-emerald-500/50 rounded-full"></div>
+                                <div class="h-24 bg-gradient-to-br from-slate-800 to-slate-900 relative overflow-hidden">
+                                    <div class="absolute top-2 left-2 w-12 h-10 bg-white/10 rounded"></div>
+                                    <div class="absolute top-2 right-2 w-10 h-10 bg-gradient-to-br from-emerald-400/30 to-blue-400/30 rounded-lg"></div>
+                                    <div class="absolute bottom-2 left-2 w-8 h-3 bg-emerald-500/50 rounded-full"></div>
                                 </div>
-                                <div class="p-4">
-                                    <div class="flex items-center justify-between">
-                                        <div>
-                                            <h4 class="font-semibold text-gray-800">Modern</h4>
-                                            <p class="text-xs text-gray-500">Sidebar + glassmorphism</p>
-                                        </div>
-                                        <div class="w-5 h-5 rounded-full border-2 peer-checked:bg-primary-500 peer-checked:border-primary-500 flex items-center justify-center">
-                                            <svg class="w-3 h-3 text-white hidden peer-checked:block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
-                                            </svg>
-                                        </div>
-                                    </div>
+                                <div class="p-3">
+                                    <h4 class="font-semibold text-gray-800 text-sm">Modern</h4>
+                                    <p class="text-xs text-gray-500">Sidebar + Dark hero</p>
                                 </div>
                             </div>
-                            <div class="absolute top-2 right-2 px-2 py-1 bg-primary-500 text-white text-xs font-bold rounded hidden peer-checked:block">
-                                Activo
+                            <div class="absolute top-1 right-1 px-1.5 py-0.5 bg-primary-500 text-white text-[10px] font-bold rounded hidden peer-checked:block">
+                                ✓
+                            </div>
+                        </label>
+
+                        {{-- Minimal Template --}}
+                        <label class="relative cursor-pointer group">
+                            <input type="radio" name="storefront_template" value="minimal" class="sr-only peer" 
+                                   {{ $currentTemplate === 'minimal' ? 'checked' : '' }}>
+                            <div class="border-2 rounded-xl overflow-hidden peer-checked:border-primary-500 peer-checked:ring-2 peer-checked:ring-primary-200 hover:border-gray-300 transition-all">
+                                <div class="h-24 bg-white relative overflow-hidden">
+                                    <div class="absolute top-4 left-1/2 -translate-x-1/2 w-20 h-3 bg-slate-200 rounded-full"></div>
+                                    <div class="absolute top-10 left-1/2 -translate-x-1/2 w-12 h-2 bg-slate-100 rounded-full"></div>
+                                    <div class="absolute bottom-2 left-3 right-3 flex gap-2 justify-center">
+                                        <div class="w-8 h-8 bg-slate-100 rounded"></div>
+                                        <div class="w-8 h-8 bg-slate-100 rounded"></div>
+                                        <div class="w-8 h-8 bg-slate-100 rounded"></div>
+                                    </div>
+                                </div>
+                                <div class="p-3">
+                                    <h4 class="font-semibold text-gray-800 text-sm">Minimal</h4>
+                                    <p class="text-xs text-gray-500">Ultra limpio, elegante</p>
+                                </div>
+                            </div>
+                            <div class="absolute top-1 right-1 px-1.5 py-0.5 bg-primary-500 text-white text-[10px] font-bold rounded hidden peer-checked:block">
+                                ✓
+                            </div>
+                        </label>
+
+                        {{-- Bold Template --}}
+                        <label class="relative cursor-pointer group">
+                            <input type="radio" name="storefront_template" value="bold" class="sr-only peer" 
+                                   {{ $currentTemplate === 'bold' ? 'checked' : '' }}>
+                            <div class="border-2 rounded-xl overflow-hidden peer-checked:border-primary-500 peer-checked:ring-2 peer-checked:ring-primary-200 hover:border-gray-300 transition-all">
+                                <div class="h-24 bg-gradient-to-br from-orange-400 to-pink-500 relative overflow-hidden">
+                                    <div class="absolute -top-4 -right-4 w-16 h-16 bg-white/20 rounded-full blur-xl"></div>
+                                    <div class="absolute top-3 left-3 w-16 h-4 bg-white/30 rounded-full"></div>
+                                    <div class="absolute bottom-2 left-3 right-3 flex gap-2">
+                                        <div class="w-10 h-10 bg-white/40 rounded-xl"></div>
+                                        <div class="w-10 h-10 bg-white/40 rounded-xl"></div>
+                                    </div>
+                                </div>
+                                <div class="p-3">
+                                    <h4 class="font-semibold text-gray-800 text-sm">Bold</h4>
+                                    <p class="text-xs text-gray-500">Vibrante, app mobile</p>
+                                </div>
+                            </div>
+                            <div class="absolute top-1 right-1 px-1.5 py-0.5 bg-primary-500 text-white text-[10px] font-bold rounded hidden peer-checked:block">
+                                ✓
                             </div>
                         </label>
                     </div>
-                    <p class="text-xs text-gray-500 mt-2">Selecciona el diseno visual de la tienda publica de esta empresa</p>
+                    <p class="text-xs text-gray-500 mt-2">Selecciona el diseno visual de la tienda publica</p>
                 </div>
 
                 <div class="flex items-center">
