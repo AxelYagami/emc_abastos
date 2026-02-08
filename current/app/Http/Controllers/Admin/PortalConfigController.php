@@ -65,7 +65,7 @@ class PortalConfigController extends Controller
             'flyer_title' => 'nullable|string|max:100',
             'flyer_subtitle' => 'nullable|string|max:200',
             'flyer_product_ids' => 'nullable|array',
-            'flyer_product_count' => 'nullable|integer|min:1|max:12',
+            'flyer_max_per_store' => 'nullable|integer|min:1|max:10',
             'flyer_accent_color' => 'nullable|string|max:20',
             // Featured stores
             'featured_store_ids' => 'nullable|array',
