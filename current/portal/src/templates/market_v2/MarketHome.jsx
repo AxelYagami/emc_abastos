@@ -62,10 +62,10 @@ export default function MarketHome({ config }) {
                   <IconArrowRight className="w-4 h-4" />
                 </Link>
                 <Link
-                  to="/productos"
+                  to="/promos"
                   className="inline-flex items-center justify-center px-7 py-3.5 bg-white/5 border border-white/10 text-white rounded-xl font-semibold hover:bg-white/10 transition-all"
                 >
-                  Ver catalogo
+                  Ver ofertas
                 </Link>
               </div>
               {/* Trust badges */}
