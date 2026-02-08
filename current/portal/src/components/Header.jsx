@@ -128,14 +128,6 @@ export default function Header({ config, onOpenAssistant }) {
                   <span>{item.label}</span>
                 </Link>
               ))}
-              <hr className="my-2" />
-              <a
-                href="/registro"
-                className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-gray-50 rounded-lg font-medium"
-              >
-                <Icons.User />
-                <span>Crear cuenta</span>
-              </a>
             </nav>
           </div>
         )}
