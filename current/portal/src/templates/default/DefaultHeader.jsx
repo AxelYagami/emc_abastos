@@ -1,11 +1,10 @@
 import { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { IconHome, IconStore, IconProducts, IconTag, IconSparkles, IconMenu, IconClose } from '../../components/shared/Icons'
+import { IconHome, IconStore, IconTag, IconSparkles, IconMenu, IconClose } from '../../components/shared/Icons'
 
 const navItems = [
   { to: '/', label: 'Inicio', icon: IconHome },
   { to: '/tiendas', label: 'Tiendas', icon: IconStore },
-  { to: '/productos', label: 'Productos', icon: IconProducts },
   { to: '/promos', label: 'Promos', icon: IconTag },
 ]
 
