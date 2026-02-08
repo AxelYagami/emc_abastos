@@ -205,6 +205,12 @@ class EmpresasController extends Controller
             $publicId = Str::random(8);
         }
 
+        // Build template_config with storefront_template
+        $templateConfig = $empresa->template_config ?? [];
+        if (isset($data['storefront_template'])) {
+            $templateConfig['storefront_template'] = $data['storefront_template'];
+        }
+
         $empresa->update([
             'nombre' => $data['nombre'],
             'slug' => $data['slug'] ?? $empresa->slug,
@@ -217,6 +223,7 @@ class EmpresasController extends Controller
             'activa' => $data['activa'] ?? true,
             'theme_id' => $data['theme_id'] ?? null,
             'settings' => array_filter($settings),
+            'template_config' => $templateConfig,
             'descripcion' => $data['descripcion'] ?? null,
             'tags' => !empty($tags) ? $tags : null,
             'is_featured' => $request->boolean('is_featured'),
