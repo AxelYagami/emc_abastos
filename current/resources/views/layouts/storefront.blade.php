@@ -6,7 +6,8 @@
     // Create fresh ThemeResolver (no cache for storefront views)
     $themeResolver = new \App\Services\ThemeResolver($empresa);
 
-    $appName = $empresa ? $empresa->getAppName() : 'Mercado De Abastos';
+    // Nombre interno (grande) para navbar
+    $appName = $empresa?->nombre ?? 'Mercado De Abastos';
     $logoUrl = $empresa ? $empresa->getLogoUrl() : asset('storage/brand/logo-iados.png');
 
     // Get resolved colors
