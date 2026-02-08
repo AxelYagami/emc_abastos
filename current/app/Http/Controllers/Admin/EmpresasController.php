@@ -142,6 +142,8 @@ class EmpresasController extends Controller
             'descripcion' => 'nullable|string|max:500',
             'tags' => 'nullable|string|max:200',
             'is_featured' => 'boolean',
+            // Storefront template
+            'storefront_template' => 'nullable|string|in:classic,modern',
             // Settings
             'app_name' => 'nullable|string|max:200',
             'primary_color' => 'nullable|string|max:20',
