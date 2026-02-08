@@ -104,22 +104,22 @@
                 {{-- Storefront Template Selector --}}
                 <div class="mt-6 pt-6 border-t">
                     <label class="block text-sm font-medium text-gray-700 mb-3">Plantilla de Tienda (Storefront)</label>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
                         {{-- Classic Template --}}
                         <label class="relative cursor-pointer group">
                             <input type="radio" name="storefront_template" value="classic" class="sr-only peer" checked>
                             <div class="border-2 rounded-xl overflow-hidden peer-checked:border-primary-500 peer-checked:ring-2 peer-checked:ring-primary-200 hover:border-gray-300 transition-all">
-                                <div class="h-32 bg-gradient-to-br from-emerald-500 to-emerald-600 relative overflow-hidden">
-                                    <div class="absolute inset-4 bg-white/20 rounded-lg"></div>
-                                    <div class="absolute bottom-4 left-4 right-4 flex gap-2">
-                                        <div class="w-12 h-12 bg-white/30 rounded-lg"></div>
-                                        <div class="w-12 h-12 bg-white/30 rounded-lg"></div>
-                                        <div class="w-12 h-12 bg-white/30 rounded-lg"></div>
+                                <div class="h-24 bg-gradient-to-br from-emerald-500 to-emerald-600 relative overflow-hidden">
+                                    <div class="absolute inset-3 bg-white/20 rounded"></div>
+                                    <div class="absolute bottom-2 left-3 right-3 flex gap-1">
+                                        <div class="w-6 h-6 bg-white/30 rounded"></div>
+                                        <div class="w-6 h-6 bg-white/30 rounded"></div>
+                                        <div class="w-6 h-6 bg-white/30 rounded"></div>
                                     </div>
                                 </div>
-                                <div class="p-4">
-                                    <h4 class="font-semibold text-gray-800">Classic</h4>
-                                    <p class="text-xs text-gray-500">Tradicional con hero y grid</p>
+                                <div class="p-3">
+                                    <h4 class="font-semibold text-gray-800 text-sm">Classic</h4>
+                                    <p class="text-xs text-gray-500">Hero + Grid tradicional</p>
                                 </div>
                             </div>
                         </label>
@@ -128,14 +128,48 @@
                         <label class="relative cursor-pointer group">
                             <input type="radio" name="storefront_template" value="modern" class="sr-only peer">
                             <div class="border-2 rounded-xl overflow-hidden peer-checked:border-primary-500 peer-checked:ring-2 peer-checked:ring-primary-200 hover:border-gray-300 transition-all">
-                                <div class="h-32 bg-gradient-to-br from-slate-800 to-slate-900 relative overflow-hidden">
-                                    <div class="absolute top-4 left-4 w-24 h-16 bg-white/10 rounded-lg backdrop-blur"></div>
-                                    <div class="absolute top-4 right-4 w-20 h-20 bg-gradient-to-br from-emerald-400/30 to-blue-400/30 rounded-xl"></div>
-                                    <div class="absolute bottom-4 left-4 w-16 h-6 bg-emerald-500/50 rounded-full"></div>
+                                <div class="h-24 bg-gradient-to-br from-slate-800 to-slate-900 relative overflow-hidden">
+                                    <div class="absolute top-2 left-2 w-12 h-10 bg-white/10 rounded"></div>
+                                    <div class="absolute top-2 right-2 w-10 h-10 bg-gradient-to-br from-emerald-400/30 to-blue-400/30 rounded-lg"></div>
                                 </div>
-                                <div class="p-4">
-                                    <h4 class="font-semibold text-gray-800">Modern</h4>
-                                    <p class="text-xs text-gray-500">Sidebar + glassmorphism</p>
+                                <div class="p-3">
+                                    <h4 class="font-semibold text-gray-800 text-sm">Modern</h4>
+                                    <p class="text-xs text-gray-500">Sidebar + Dark hero</p>
+                                </div>
+                            </div>
+                        </label>
+
+                        {{-- Minimal Template --}}
+                        <label class="relative cursor-pointer group">
+                            <input type="radio" name="storefront_template" value="minimal" class="sr-only peer">
+                            <div class="border-2 rounded-xl overflow-hidden peer-checked:border-primary-500 peer-checked:ring-2 peer-checked:ring-primary-200 hover:border-gray-300 transition-all">
+                                <div class="h-24 bg-white relative overflow-hidden">
+                                    <div class="absolute top-4 left-1/2 -translate-x-1/2 w-20 h-3 bg-slate-200 rounded-full"></div>
+                                    <div class="absolute bottom-2 left-3 right-3 flex gap-2 justify-center">
+                                        <div class="w-8 h-8 bg-slate-100 rounded"></div>
+                                        <div class="w-8 h-8 bg-slate-100 rounded"></div>
+                                    </div>
+                                </div>
+                                <div class="p-3">
+                                    <h4 class="font-semibold text-gray-800 text-sm">Minimal</h4>
+                                    <p class="text-xs text-gray-500">Ultra limpio</p>
+                                </div>
+                            </div>
+                        </label>
+
+                        {{-- Bold Template --}}
+                        <label class="relative cursor-pointer group">
+                            <input type="radio" name="storefront_template" value="bold" class="sr-only peer">
+                            <div class="border-2 rounded-xl overflow-hidden peer-checked:border-primary-500 peer-checked:ring-2 peer-checked:ring-primary-200 hover:border-gray-300 transition-all">
+                                <div class="h-24 bg-gradient-to-br from-orange-400 to-pink-500 relative overflow-hidden">
+                                    <div class="absolute -top-4 -right-4 w-16 h-16 bg-white/20 rounded-full blur-xl"></div>
+                                    <div class="absolute bottom-2 left-3 flex gap-2">
+                                        <div class="w-10 h-10 bg-white/40 rounded-xl"></div>
+                                    </div>
+                                </div>
+                                <div class="p-3">
+                                    <h4 class="font-semibold text-gray-800 text-sm">Bold</h4>
+                                    <p class="text-xs text-gray-500">Vibrante, mobile</p>
                                 </div>
                             </div>
                         </label>
