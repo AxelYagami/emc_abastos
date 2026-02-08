@@ -89,7 +89,8 @@ class ThemeResolver
             return new self(null);
         }
 
-        return Cache::remember("theme_resolver:{$empresaId}", 3600, function () use ($empresaId) {
+        // Reduced cache to 5 minutes for faster updates
+        return Cache::remember("theme_resolver:{$empresaId}", 300, function () use ($empresaId) {
             $empresa = Empresa::with('theme')->find($empresaId);
             return new self($empresa);
         });
