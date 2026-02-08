@@ -10,10 +10,15 @@
     <section class="relative py-20 lg:py-32">
         <div class="max-w-5xl mx-auto px-6 text-center">
             <h1 class="text-4xl md:text-6xl lg:text-7xl font-light tracking-tight text-slate-900 leading-tight">
-                {{ $currentStore->brand_nombre_publico ?? $currentStore->nombre ?? 'Bienvenido' }}
+                {{ $currentStore->nombre ?? 'Bienvenido' }}
             </h1>
+            @if($currentStore->brand_nombre_publico)
+            <p class="mt-4 text-xl md:text-2xl text-slate-400 font-light">
+                {{ $currentStore->brand_nombre_publico }}
+            </p>
+            @endif
             @if($currentStore->descripcion)
-            <p class="mt-8 text-xl md:text-2xl text-slate-500 font-light max-w-2xl mx-auto leading-relaxed">
+            <p class="mt-6 text-lg md:text-xl text-slate-500 font-light max-w-2xl mx-auto leading-relaxed">
                 {{ $currentStore->descripcion }}
             </p>
             @endif
