@@ -82,7 +82,7 @@
                     <label class="block text-sm font-medium text-gray-700 mb-1">Logo</label>
                     @if($empresa->logo_path)
                         <div class="mb-2 flex items-center gap-3">
-                            <img src="{{ asset('storage/' . $empresa->logo_path) }}" class="h-16 w-auto rounded">
+                            <img src="{{ $empresa->getLogoUrl() }}" class="h-16 w-auto rounded" alt="Logo actual">
                             <label class="flex items-center text-sm text-gray-600">
                                 <input type="checkbox" name="remove_logo" value="1" class="mr-2">
                                 Eliminar logo actual
