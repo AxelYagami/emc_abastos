@@ -251,7 +251,17 @@ class Empresa extends Model
 
     public function hasMercadoPago(): bool
     {
-        return !empty($this->getMpAccessToken()) && !empty($this->getMpPublicKey());
+        $hasToken = !empty($this->getMpAccessToken());
+        $hasKey = !empty($this->getMpPublicKey());
+        
+        \Log::debug('hasMercadoPago check', [
+            'empresa_id' => $this->id,
+            'has_token' => $hasToken,
+            'has_key' => $hasKey,
+            'token_preview' => $hasToken ? substr($this->getMpAccessToken(), 0, 20) . '...' : null,
+        ]);
+        
+        return $hasToken && $hasKey;
     }
 
     // Catalog helpers
