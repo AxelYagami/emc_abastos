@@ -122,7 +122,7 @@ class CheckoutController extends Controller
                 'cliente_id' => $cliente->id,
                 'usuario_id' => auth()->id(),
                 'folio' => $folio,
-                'status' => 'creada',
+                'status' => 'nuevo', // Status inicial para aparecer en Ops Móvil
                 'tipo_entrega' => $tipoEntrega,
                 'fulfillment_type' => $tipoEntrega,
                 'estimated_ready_at' => $estimatedReadyAt,
