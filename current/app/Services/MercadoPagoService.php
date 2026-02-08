@@ -105,6 +105,7 @@ class MercadoPagoService
     public function getPaymentStatus(string $paymentId): ?array
     {
         $response = Http::withToken($this->accessToken)
+            ->withOptions(['verify' => false])
             ->get("{$this->baseUrl}/v1/payments/{$paymentId}");
 
         if (!$response->successful()) {
