@@ -57,7 +57,7 @@ final class StoreController extends Controller
 
     public function thanks($folio)
     {
-        $orden = Orden::where('folio', $folio)->first();
+        $orden = Orden::with('empresa')->where('folio', $folio)->first();
 
         if (!$orden) {
             return view('store.thanks', [
