@@ -26,7 +26,6 @@ const MarketFooter = lazy(() => import('./templates/market_v2/MarketFooter'))
 
 // Shared pages (same across templates)
 import Stores from './pages/Stores'
-import Products from './pages/Products'
 import Promos from './pages/Promos'
 import AIAssistant from './components/AIAssistant'
 
