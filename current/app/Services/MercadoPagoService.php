@@ -30,12 +30,17 @@ class MercadoPagoService
         foreach ($orden->items as $item) {
             $items[] = [
                 'id' => (string) $item->producto_id,
-                'title' => $item->nombre ?? 'Producto',
+                'title' => substr($item->nombre ?? 'Producto', 0, 256),
                 'quantity' => (int) $item->cantidad,
                 'unit_price' => (float) $item->precio,
                 'currency_id' => 'MXN',
             ];
         }
+
+        // Ensure URLs are absolute
+        $successUrl = url($successUrl);
+        $failureUrl = url($failureUrl);
+        $pendingUrl = url($pendingUrl);
 
         $payload = [
             'items' => $items,
@@ -46,8 +51,7 @@ class MercadoPagoService
                 'pending' => $pendingUrl,
             ],
             'auto_return' => 'approved',
-            'notification_url' => route('webhooks.mercadopago'),
-            'statement_descriptor' => substr($this->empresa->getAppName(), 0, 22),
+            'statement_descriptor' => substr($this->empresa->nombre ?? 'Tienda', 0, 22),
             'metadata' => [
                 'orden_id' => $orden->id,
                 'empresa_id' => $this->empresa->id,
@@ -55,16 +59,30 @@ class MercadoPagoService
             ],
         ];
 
+        // Add notification URL only if it's a valid absolute URL
+        $notificationUrl = route('webhooks.mercadopago');
+        if (filter_var($notificationUrl, FILTER_VALIDATE_URL)) {
+            $payload['notification_url'] = $notificationUrl;
+        }
+
         // Add payer info if available
         if ($orden->cliente) {
             $payload['payer'] = [
-                'name' => $orden->cliente->nombre,
-                'email' => $orden->cliente->email ?? '',
-                'phone' => [
-                    'number' => $orden->cliente->whatsapp ?? '',
-                ],
+                'name' => $orden->cliente->nombre ?? 'Cliente',
+                'email' => $orden->cliente->email ?? 'cliente@ejemplo.com',
             ];
+            if ($orden->cliente->whatsapp) {
+                $payload['payer']['phone'] = [
+                    'number' => preg_replace('/\D/', '', $orden->cliente->whatsapp),
+                ];
+            }
         }
+
+        \Log::info('MercadoPago: Creating preference', [
+            'folio' => $orden->folio,
+            'back_urls' => $payload['back_urls'],
+            'items_count' => count($items),
+        ]);
 
         $response = Http::withToken($this->accessToken)
             ->withOptions([
