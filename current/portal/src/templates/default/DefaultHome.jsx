@@ -124,7 +124,6 @@ export default function DefaultHome({ config }) {
             <SectionHeader
               title={flyer.title || 'Productos destacados'}
               subtitle={flyer.subtitle}
-              linkTo="/productos"
               align="center"
               light={!!accentColor}
               size="large"
