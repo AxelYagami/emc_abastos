@@ -103,15 +103,6 @@ export default function Header({ config, onOpenAssistant }) {
               </button>
             )}
 
-            {/* Register */}
-            <a
-              href="/registro"
-              className="hidden sm:flex items-center gap-2 px-4 py-2 bg-gray-900 text-white rounded-lg font-medium hover:bg-gray-800 transition-colors"
-            >
-              <Icons.User />
-              <span>Crear cuenta</span>
-            </a>
-
             {/* Mobile menu button */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
