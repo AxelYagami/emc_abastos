@@ -176,7 +176,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'empresa', 'role:adm
     Route::get('inventarios', [InventariosController::class, 'index'])->name('inventarios.index');
     Route::get('inventarios/{productoId}/kardex', [InventariosController::class, 'kardex'])->name('inventarios.kardex');
     Route::post('inventarios/{productoId}/ajustar', [InventariosController::class, 'ajustar'])->name('inventarios.ajustar');
-    Route::resource('clientes', ClientesController::class)->except(['show']);
+    Route::resource('clientes', ClientesController::class);
     Route::post('clientes/{id}/toggle', [ClientesController::class, 'toggle'])->name('clientes.toggle');
     Route::resource('flyers', \App\Http\Controllers\Admin\FlyersController::class)->except(['show']);
     Route::post('flyers/reorder', [\App\Http\Controllers\Admin\FlyersController::class, 'reorder'])->name('flyers.reorder');
