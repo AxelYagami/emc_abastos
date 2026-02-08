@@ -217,9 +217,10 @@ class Empresa extends Model
     public function getLogoUrl(): ?string
     {
         if ($this->logo_path) {
-            return asset('storage/' . $this->logo_path);
+            // Use Storage::url() for proper URL generation (works with symlink or cloud storage)
+            return \Illuminate\Support\Facades\Storage::disk('public')->url($this->logo_path);
         }
-        return $this->getSetting('logo_url') ?? asset('storage/brand/logo-iados.png');
+        return $this->getSetting('logo_url') ?? asset('images/logo-default.png');
     }
 
     public function getPrimaryColor(): string
