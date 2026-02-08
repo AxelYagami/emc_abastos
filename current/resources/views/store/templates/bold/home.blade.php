@@ -27,11 +27,17 @@
                     <span class="text-sm font-semibold text-slate-700">Abierto ahora</span>
                 </div>
                 
-                <h1 class="text-5xl lg:text-7xl font-black tracking-tight text-slate-900 mb-6">
-                    {{ $currentStore->brand_nombre_publico ?? $currentStore->nombre ?? 'Tienda' }}
+                <h1 class="text-5xl lg:text-7xl font-black tracking-tight text-slate-900 mb-4">
+                    {{ $currentStore->nombre ?? 'Tienda' }}
                 </h1>
                 
-                <p class="text-xl text-slate-600 max-w-lg mx-auto mb-8">
+                @if($currentStore->brand_nombre_publico)
+                <p class="text-xl text-slate-500 font-medium mb-4">
+                    {{ $currentStore->brand_nombre_publico }}
+                </p>
+                @endif
+                
+                <p class="text-lg text-slate-600 max-w-lg mx-auto mb-8">
                     {{ $currentStore->descripcion ?? 'Los mejores productos al mejor precio' }}
                 </p>
                 
