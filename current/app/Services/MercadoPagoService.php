@@ -30,9 +30,9 @@ class MercadoPagoService
         foreach ($orden->items as $item) {
             $items[] = [
                 'id' => (string) $item->producto_id,
-                'title' => $item->nombre_snapshot ?? 'Producto',
+                'title' => $item->nombre ?? 'Producto',
                 'quantity' => (int) $item->cantidad,
-                'unit_price' => (float) $item->precio_unitario,
+                'unit_price' => (float) $item->precio,
                 'currency_id' => 'MXN',
             ];
         }
