@@ -1,9 +1,13 @@
 import { IconArrowRight } from './Icons'
 
 export default function ProductCard({ product, showPrice = true, showStore = true, index = 0, featured = false }) {
-  const storeUrl = product.store?.store_url || '#'
-  const productUrl = product.store?.handle
-    ? `/t/${product.store.handle}/producto/${product.id}`
+  // Build store URL - always go to the store's product page
+  const storeHandle = product.store?.handle || product.empresa?.handle
+  const storeUrl = product.store?.store_url || product.empresa?.store_url || '#'
+  
+  // Product URL goes to the store and opens the product
+  const productUrl = storeHandle
+    ? `/t/${storeHandle}?producto=${product.id}`
     : storeUrl
 
   return (
@@ -42,7 +46,7 @@ export default function ProductCard({ product, showPrice = true, showStore = tru
         {/* Hover overlay */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end justify-center pb-4">
           <span className="inline-flex items-center gap-1.5 px-4 py-2 bg-white/95 backdrop-blur-sm text-gray-900 text-sm font-semibold rounded-full shadow-lg transform translate-y-2 group-hover:translate-y-0 transition-transform duration-300">
-            Ver producto
+            Ir a la tienda
             <IconArrowRight className="w-3.5 h-3.5" />
           </span>
         </div>
@@ -50,18 +54,18 @@ export default function ProductCard({ product, showPrice = true, showStore = tru
 
       {/* Info */}
       <div className="p-4 flex flex-col flex-1">
-        {showStore && product.store && (
+        {showStore && (product.store || product.empresa) && (
           <div className="flex items-center gap-2 mb-2.5">
             <div className="w-6 h-6 rounded-lg bg-gray-100 overflow-hidden flex-shrink-0 ring-1 ring-gray-200">
-              {product.store.logo_url ? (
-                <img src={product.store.logo_url} alt="" className="w-full h-full object-cover" />
+              {(product.store?.logo_url || product.empresa?.logo_url) ? (
+                <img src={product.store?.logo_url || product.empresa?.logo_url} alt="" className="w-full h-full object-cover" />
               ) : (
                 <span className="w-full h-full flex items-center justify-center text-[10px] font-bold text-primary-600 bg-primary-50">
-                  {product.store.nombre?.[0]}
+                  {(product.store?.nombre || product.empresa?.nombre)?.[0]}
                 </span>
               )}
             </div>
-            <span className="text-xs text-gray-500 font-medium truncate">{product.store.nombre}</span>
+            <span className="text-xs text-gray-500 font-medium truncate">{product.store?.nombre || product.empresa?.nombre}</span>
           </div>
         )}
 
@@ -75,7 +79,7 @@ export default function ProductCard({ product, showPrice = true, showStore = tru
               ${parseFloat(product.precio).toFixed(2)}
             </p>
             <span className="text-xs text-gray-400 group-hover:text-primary-500 transition-colors">
-              Ver mas
+              Ver en tienda
             </span>
           </div>
         )}
