@@ -186,19 +186,23 @@
 
                 <div class="border-t border-primary-700/50 my-3"></div>
 
+                {{-- HIDDEN: Ordenes del dia - puede habilitarse si se necesita
                 <a href="{{ route('ops.ordenes.hoy') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition {{ request()->routeIs('ops.ordenes.*') ? 'bg-white/20 text-white' : 'text-primary-100 hover:bg-white/10' }}">
                     <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
                     </svg>
                     <span x-show="sidebarOpen">Ordenes del dia</span>
                 </a>
+                --}}
 
+                {{-- HIDDEN: Operaciones Hub - puede habilitarse si se necesita
                 <a href="{{ route('ops.hub') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition {{ request()->routeIs('ops.hub') ? 'bg-white/20 text-white' : 'text-primary-100 hover:bg-white/10' }}">
                     <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
                     </svg>
                     <span x-show="sidebarOpen">Operaciones</span>
                 </a>
+                --}}
 
                 <a href="{{ route('ops.movil') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition {{ request()->routeIs('ops.movil*') ? 'bg-white/20 text-white' : 'text-primary-100 hover:bg-white/10' }}">
                     <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
