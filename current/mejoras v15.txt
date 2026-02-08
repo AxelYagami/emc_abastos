@@ -1,0 +1,160 @@
+INSTRUCCIONES PARA CLAUDE CODE (NO PREGUNTAR, SOLO EJECUTAR)
+
+Contexto:
+Proyecto Laravel EMC/iadOs (multi-empresa / tenant por empresa_id). Ya existen módulos de Operaciones/Entregas/Caja/Pagos/WhatsAppLogs (WhatsAppLog con empresa_id, retry/resend). 
+Queremos una pantalla única operativa /ops/movil que maneje:
+- Lista + filtros + métricas básicas
+- Detalle de orden
+- Transición de estatus (Modo Simple: un botón “Siguiente”)
+- Asignación de repartidor (solo para delivery)
+- Reintentos de notificación
+- Flujo visual por orden con animación ligera (stepper)
+Y queremos integrar Push Notifications (PWA) como canal interno (staff) para cambios de estatus.
+
+NO eliminar rutas antiguas /ordenes-del-dia y /operaciones, pero dejarlas READ-ONLY (consulta) o quitar botones operativos ahí para no confundir.
+Toda operación real ocurre en /ops/movil.
+
+CRÍTICO: integridad multi-empresa
+- Todo query y operación debe estar scoped por empresa_id (empresa activa/tenant).
+- Nunca exponer ni modificar órdenes de otra empresa.
+- Suscripciones push, envíos y logs deben incluir empresa_id.
+- Repartidores asignables solo de la misma empresa.
+- Si hay middleware/tenant resolver, úsalo. Si no, crea helper currentEmpresaId() / currentEmpresa() basado en sesión/usuario.
+
+STACK:
+- Livewire 3 + Tailwind (si no existe, instalar)
+- Web Push (VAPID) via “minishlink/web-push” o paquete Laravel equivalente
+- Service Worker para push + botón “Activar notificaciones”
+- Jobs en cola (ideal) con fallback sync si no hay worker
+
+ENTREGABLES:
+1) Migraciones + modelos:
+   - push_subscriptions (empresa_id, user_id, endpoint, p256dh, auth, content_encoding, user_agent, last_used_at, revoked_at, timestamps)
+     índices: (empresa_id,user_id), unique(empresa_id,user_id,endpoint_hash)
+   - push_notification_logs (empresa_id, user_id nullable, order_id nullable, entrega_id nullable, event_key, payload_json, status, error, provider_msg_id, created_at)
+     índices: (empresa_id,created_at), (empresa_id,status), (empresa_id,order_id)
+   Si ya existe tabla whatsapp_logs, NO la reutilices: crea logs nuevos para Push.
+
+2) Config:
+   - config/services.php agregar 'webpush' con vapid public/private/subject desde env
+   - .env.example agregar:
+     VAPID_PUBLIC_KEY=
+     VAPID_PRIVATE_KEY=
+     VAPID_SUBJECT=mailto:soporte@iadOs.mx
+   - comando artisan para generar VAPID keys:
+     php artisan webpush:vapid (si usas paquete) o crear command propio “push:vapid”
+   Documenta en README interno cómo generar keys y habilitar HTTPS.
+
+3) PWA Front:
+   - public/sw.js (service worker):
+     - manejar push event: mostrar notification con title/body/icon, abrir URL al click
+   - En layout admin (o layout ops móvil) agregar registro SW + botón:
+     “🔔 Activar notificaciones”
+     - pedir permiso
+     - crear subscription con VAPID public key
+     - POST /ops/push/subscribe con JSON subscription
+   Importante: solo funciona en HTTPS (excepto localhost). Menciona esto en README.
+
+4) Endpoints (scoped):
+   - POST /ops/push/subscribe
+   - POST /ops/push/unsubscribe
+   - GET  /ops/push/vapid-public-key
+   Todos deben usar middleware auth + empresa scope.
+   Guardar subscription con empresa_id del contexto.
+
+5) Servicio de envío Push:
+   - App\Services\Push\WebPushService
+     - sendToUsers(empresa_id, user_ids, payload)
+     - sendToRole(empresa_id, role_slug, payload) si existe roles
+     - maneja inválidos: si endpoint 410/404 => revoked_at
+     - registra push_notification_logs con status sent/failed
+   - Job: SendPushNotificationJob (queue) recibe empresa_id, target users, payload, event meta
+
+6) Integración con flujo de órdenes:
+   - Crear evento: OrderStatusChanged (empresa_id, order_id, tipo_entrega, from_status, to_status, actor_user_id)
+   - Listener: SendPushOnOrderStatusChanged
+     - define audiencia:
+       * ops/admin siempre
+       * caja si to_status en [CONFIRMADA, ENTREGADA] (ajusta a tu negocio)
+       * repartidor (solo delivery) si to_status en [ASIGNADA, EN_CAMINO]
+     - payload estándar:
+       title: "Pedido {folio} - {to_status_label}"
+       body: "{cliente} · {pickup/delivery} · Total ${total}"
+       url: "/ops/movil/orden/{id}"
+       tags: {empresa_id, order_id, to_status}
+   - Asegurar: solo usuarios de empresa_id reciben.
+
+7) /ops/movil (Livewire):
+   - Ruta: GET /ops/movil => componente OpsMovilIndex
+   - Ruta: GET /ops/movil/orden/{order} => componente OpsMovilShow
+   Ambas rutas con middleware: auth + empresa + role ops/caja/admin/repartidor (según tu sistema)
+
+   OpsMovilIndex:
+   - filtros: q, tipo (pickup|delivery|all), grupo (pendientes|proceso|listas|finalizadas), fecha (hoy)
+   - métricas arriba (cards): pendientes, preparando, listas/en_camino, entregadas, fallos_push
+   - lista de tarjetas con stepper visual + animación ligera (Alpine)
+   - botón “Siguiente” por orden (Modo Simple)
+   - botón “Ver”
+
+   OpsMovilShow:
+   - stepper grande con timestamps
+   - botón “Siguiente”
+   - si delivery:
+       - dirección, link maps, tel: cliente
+       - asignación repartidor (autocomplete si ya existe /ops/lookups/usuarios o perfiles repartidor)
+       - botones: Asignar, En camino, Entregada (pero en Modo Simple el “Siguiente” guía)
+   - sección Notificaciones:
+       - último log push (sent/failed) + error si hay
+       - botón “Reintentar notificación” (reenvía último payload)
+   - sección Pagos/Caja: solo lectura (mostrar pagos asociados y estado)
+
+8) Reglas de transición (Modo Simple):
+   - Crear OrderFlowService con mapa:
+     Estados base: RECIBIDA -> CONFIRMADA -> PREPARANDO -> (PICKUP: LISTA_PARA_RECOGER -> ENTREGADA) (DELIVERY: ASIGNADA -> EN_CAMINO -> ENTREGADA)
+   - nextStatus(order) decide próximo estado según tipo_entrega y datos:
+       * Si delivery y no hay repartidor asignado, próximo “ASIGNADA” (y abre modal asignación)
+       * Si no hay pago y negocio exige pago antes de confirmar, bloquear confirmación (mostrar mensaje)
+   - applyTransition(order, to_status, actor):
+       * valida empresa_id
+       * guarda timestamps (confirmed_at, preparing_at, ready_at, assigned_at, en_ruta_at, delivered_at) si existen o agrega columnas mínimas (opcional).
+       * dispara evento OrderStatusChanged
+       * log ActivityLogger si existe
+
+9) READ-ONLY rutas antiguas:
+   - /ordenes-del-dia y /operaciones:
+     * elimina/oculta botones de cambiar estado / asignar / reintentos
+     * añade banner arriba:
+       “Modo consulta. Para operar usa /ops/movil”
+     * añade link/botón a /ops/movil
+
+10) Animación ligera stepper:
+    - Usar Alpine: transiciones en clase al actualizar status
+    - No usar librerías pesadas.
+
+11) Multi-empresa:
+    - Implementar helper:
+      currentEmpresaId(): int
+      que obtenga empresa activa desde usuario->empresa_actual_id o sesión('empresa_id') o tenant resolver existente.
+    - Toda consulta: ->where('empresa_id', currentEmpresaId())
+    - Route model binding: NO usar Order $order directo sin scope; usar binding custom o resolver manual:
+      Order::where('empresa_id', currentEmpresaId())->findOrFail($id)
+
+12) Pruebas mínimas:
+    - Feature test: no permite ver/operar orden de otra empresa (403/404)
+    - Unit: nextStatus para pickup y delivery
+    - Feature: subscribe push guarda empresa_id correcto
+
+13) DX:
+    - README interno: pasos para habilitar Push:
+      * Generar VAPID
+      * HTTPS requerido
+      * Correr queue worker si usa jobs
+
+Implementa todo, actualiza rutas, vistas, componentes, y deja el diseño limpio mobile-first.
+No preguntes nada, asume convención de carpetas existente (Operaciones/*, vistas ops/*).
+
+REGLAS ADICIONALES:
+- Si Livewire 3 no está instalado: instalar y configurar (composer require livewire/livewire:^3).
+- Si Tailwind ya existe, reutilizar. Si no, no romper build: usa clases mínimas y sin requerir tooling adicional (puede usar CSS existente).
+- Si no existe roles, segmenta audiencia por “tipo de usuario” disponible o por permisos actuales; si no se puede, envía a todos los usuarios de la empresa con acceso a ops.
+- Si no hay HTTPS en dev, documentar que push solo funciona en localhost o HTTPS.
