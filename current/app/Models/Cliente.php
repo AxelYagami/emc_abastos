@@ -31,6 +31,10 @@ class Cliente extends Model
 
     public static function upsertFromCheckout(int $empresaId, string $nombre, string $whatsapp, ?string $email): self
     {
+        // Get portal_id from empresa
+        $empresa = Empresa::find($empresaId);
+        $portalId = $empresa?->portal_id;
+
         $existing = self::where('empresa_id', $empresaId)
             ->where(function ($q) use ($whatsapp, $email) {
                 $q->where('whatsapp', $whatsapp);
@@ -43,6 +47,7 @@ class Cliente extends Model
         if ($existing) {
             $existing->nombre = $nombre;
             $existing->whatsapp = $whatsapp;
+            $existing->portal_id = $existing->portal_id ?? $portalId;
             if ($email) {
                 $existing->email = $email;
             }
@@ -52,6 +57,7 @@ class Cliente extends Model
 
         return self::create([
             'empresa_id' => $empresaId,
+            'portal_id' => $portalId,
             'nombre' => $nombre,
             'whatsapp' => $whatsapp,
             'email' => $email,
