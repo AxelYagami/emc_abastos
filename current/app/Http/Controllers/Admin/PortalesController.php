@@ -136,6 +136,9 @@ class PortalesController extends Controller
             $data['logo_path'] = $request->file('logo')->store('portales/logos', 'public');
         }
 
+        // Remove 'logo' from data (we use logo_path)
+        unset($data['logo']);
+
         // Handle booleans
         $data['activo'] = $request->boolean('activo');
         $data['flyer_enabled'] = $request->boolean('flyer_enabled');
