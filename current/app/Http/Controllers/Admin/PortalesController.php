@@ -5,8 +5,8 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Portal;
 use Illuminate\Http\Request;
-use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class PortalesController extends Controller
 {
@@ -24,38 +24,64 @@ class PortalesController extends Controller
     public function store(Request $request)
     {
         $data = $request->validate([
-            'nombre' => 'required|string|max:160',
+            'nombre' => 'required|string|max:200',
             'slug' => 'nullable|string|max:100|unique:portales,slug',
-            'dominio' => 'nullable|string|max:255|unique:portales,dominio',
+            'dominio' => 'nullable|string|max:255',
+            'tagline' => 'nullable|string|max:300',
+            'descripcion' => 'nullable|string|max:1000',
             'logo' => 'nullable|image|max:2048',
+            'activo' => 'nullable|boolean',
+            'active_template' => 'nullable|string|in:default,market_v2',
+            'hero_title' => 'nullable|string|max:200',
+            'hero_subtitle' => 'nullable|string|max:300',
+            'hero_cta_text' => 'nullable|string|max:50',
             'primary_color' => 'nullable|string|max:20',
             'secondary_color' => 'nullable|string|max:20',
-            'activo' => 'boolean',
+            'flyer_enabled' => 'nullable|boolean',
+            'flyer_title' => 'nullable|string|max:100',
+            'flyer_subtitle' => 'nullable|string|max:200',
+            'flyer_max_per_store' => 'nullable|integer|min:1|max:10',
+            'flyer_accent_color' => 'nullable|string|max:20',
+            'developer_name' => 'nullable|string|max:100',
+            'developer_url' => 'nullable|url|max:255',
+            'developer_email' => 'nullable|email|max:255',
+            'developer_whatsapp' => 'nullable|string|max:20',
+            'home_redirect_path' => 'nullable|string|max:100',
+            'promos_per_store' => 'nullable|integer|min:1|max:10',
+            'show_prices_in_portal' => 'nullable|boolean',
+            'ai_assistant_enabled' => 'nullable|boolean',
         ]);
 
-        $slug = $data['slug'] ?? Str::slug($data['nombre']);
-        $logoPath = null;
-
-        if ($request->hasFile('logo')) {
-            $logoPath = $request->file('logo')->store('portales/logos', 'public');
+        // Generate slug if empty
+        if (empty($data['slug'])) {
+            $data['slug'] = Str::slug($data['nombre']);
         }
 
-        Portal::create([
-            'nombre' => $data['nombre'],
-            'slug' => $slug,
-            'dominio' => $data['dominio'] ?? null,
-            'logo_path' => $logoPath,
-            'primary_color' => $data['primary_color'] ?? '#16a34a',
-            'secondary_color' => $data['secondary_color'] ?? '#6b7280',
-            'activo' => $data['activo'] ?? true,
-        ]);
+        // Handle logo upload
+        if ($request->hasFile('logo')) {
+            $data['logo_path'] = $request->file('logo')->store('portales/logos', 'public');
+        }
 
-        return redirect()->route('admin.portales.index')->with('ok', 'Portal creado');
+        // Handle booleans
+        $data['activo'] = $request->boolean('activo');
+        $data['flyer_enabled'] = $request->boolean('flyer_enabled');
+        $data['show_prices_in_portal'] = $request->boolean('show_prices_in_portal');
+        $data['ai_assistant_enabled'] = $request->boolean('ai_assistant_enabled');
+
+        // Set defaults
+        $data['active_template'] = $data['active_template'] ?? 'default';
+        $data['flyer_max_per_store'] = $data['flyer_max_per_store'] ?? 5;
+        $data['promos_per_store'] = $data['promos_per_store'] ?? 1;
+        $data['home_redirect_path'] = $data['home_redirect_path'] ?? 'portal';
+
+        Portal::create($data);
+
+        return redirect()->route('admin.portales.index')->with('ok', 'Portal creado correctamente');
     }
 
     public function edit(int $id)
     {
-        $portal = Portal::findOrFail($id);
+        $portal = Portal::with('empresas')->findOrFail($id);
         return view('admin.portales.edit', compact('portal'));
     }
 
@@ -64,32 +90,52 @@ class PortalesController extends Controller
         $portal = Portal::findOrFail($id);
 
         $data = $request->validate([
-            'nombre' => 'required|string|max:160',
+            'nombre' => 'required|string|max:200',
             'slug' => 'nullable|string|max:100|unique:portales,slug,' . $id,
-            'dominio' => 'nullable|string|max:255|unique:portales,dominio,' . $id,
+            'dominio' => 'nullable|string|max:255',
+            'tagline' => 'nullable|string|max:300',
+            'descripcion' => 'nullable|string|max:1000',
             'logo' => 'nullable|image|max:2048',
+            'activo' => 'nullable|boolean',
+            'active_template' => 'nullable|string|in:default,market_v2',
+            'hero_title' => 'nullable|string|max:200',
+            'hero_subtitle' => 'nullable|string|max:300',
+            'hero_cta_text' => 'nullable|string|max:50',
             'primary_color' => 'nullable|string|max:20',
             'secondary_color' => 'nullable|string|max:20',
-            'activo' => 'boolean',
+            'flyer_enabled' => 'nullable|boolean',
+            'flyer_title' => 'nullable|string|max:100',
+            'flyer_subtitle' => 'nullable|string|max:200',
+            'flyer_max_per_store' => 'nullable|integer|min:1|max:10',
+            'flyer_accent_color' => 'nullable|string|max:20',
+            'developer_name' => 'nullable|string|max:100',
+            'developer_url' => 'nullable|url|max:255',
+            'developer_email' => 'nullable|email|max:255',
+            'developer_whatsapp' => 'nullable|string|max:20',
+            'home_redirect_path' => 'nullable|string|max:100',
+            'promos_per_store' => 'nullable|integer|min:1|max:10',
+            'show_prices_in_portal' => 'nullable|boolean',
+            'ai_assistant_enabled' => 'nullable|boolean',
         ]);
 
-        $logoPath = $portal->logo_path;
+        // Handle logo upload
         if ($request->hasFile('logo')) {
-            if ($logoPath) Storage::disk('public')->delete($logoPath);
-            $logoPath = $request->file('logo')->store('portales/logos', 'public');
+            // Delete old logo
+            if ($portal->logo_path) {
+                Storage::disk('public')->delete($portal->logo_path);
+            }
+            $data['logo_path'] = $request->file('logo')->store('portales/logos', 'public');
         }
 
-        $portal->update([
-            'nombre' => $data['nombre'],
-            'slug' => $data['slug'] ?? $portal->slug,
-            'dominio' => $data['dominio'],
-            'logo_path' => $logoPath,
-            'primary_color' => $data['primary_color'] ?? $portal->primary_color,
-            'secondary_color' => $data['secondary_color'] ?? $portal->secondary_color,
-            'activo' => $request->boolean('activo'),
-        ]);
+        // Handle booleans
+        $data['activo'] = $request->boolean('activo');
+        $data['flyer_enabled'] = $request->boolean('flyer_enabled');
+        $data['show_prices_in_portal'] = $request->boolean('show_prices_in_portal');
+        $data['ai_assistant_enabled'] = $request->boolean('ai_assistant_enabled');
 
-        return redirect()->route('admin.portales.index')->with('ok', 'Portal actualizado');
+        $portal->update($data);
+
+        return redirect()->route('admin.portales.index')->with('ok', 'Portal actualizado correctamente');
     }
 
     public function destroy(int $id)
@@ -118,11 +164,9 @@ class PortalesController extends Controller
         if ($portalId) {
             $portal = Portal::findOrFail($portalId);
             session(['current_portal_id' => $portal->id]);
-            \App\Services\PortalContextService::setSessionPortal($portal->id);
             return back()->with('ok', "Portal activo: {$portal->nombre}");
         } else {
             session()->forget('current_portal_id');
-            \App\Services\PortalContextService::setSessionPortal(null);
             return back()->with('ok', 'Mostrando todos los portales');
         }
     }
