@@ -3,9 +3,12 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Traits\BelongsToPortal;
 
 class Flyer extends Model
 {
+    use BelongsToPortal;
+
     protected $table = 'flyers';
 
     protected $fillable = [

@@ -4,9 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use App\Traits\BelongsToPortal;
 
 class WhatsappLog extends Model
 {
+    use BelongsToPortal;
+
     protected $table = 'whatsapp_logs';
     protected $guarded = [];
     protected $casts = [
