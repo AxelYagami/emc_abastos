@@ -9,6 +9,7 @@ class Empresa extends Model
     protected $table = 'empresas';
 
     protected $fillable = [
+        'portal_id',
         'nombre',
         'slug',
         'activa',
