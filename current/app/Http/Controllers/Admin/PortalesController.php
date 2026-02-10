@@ -99,7 +99,7 @@ class PortalesController extends Controller
         $portal = Portal::findOrFail($id);
 
         $data = $request->validate([
-            'nombre' => 'required|string|max:200',
+            'nombre' => 'required|string|max:200|unique:portales,nombre,' . $id,
             'slug' => 'nullable|string|max:100|unique:portales,slug,' . $id,
             'dominio' => 'nullable|string|max:255',
             'tagline' => 'nullable|string|max:300',
