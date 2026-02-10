@@ -21,30 +21,35 @@ class ResolvePortalContext
     {
         $portal = null;
 
-        // 1. Try to resolve from domain/subdomain
-        $host = $request->getHost();
-        $portal = PortalContextService::resolveFromDomain($host);
+        try {
+            // 1. Try to resolve from domain/subdomain
+            $host = $request->getHost();
+            $portal = PortalContextService::resolveFromDomain($host);
 
-        // 2. If no portal from domain, try query parameter (for testing/preview)
-        if (!$portal && $request->has('portal')) {
-            $slug = $request->query('portal');
-            $portal = \App\Models\Portal::where('slug', $slug)->where('activo', true)->first();
-        }
-
-        // 3. If still no portal and user is logged in, check session
-        if (!$portal && auth()->check()) {
-            $sessionPortalId = session('current_portal_id');
-            if ($sessionPortalId) {
-                $portal = \App\Models\Portal::find($sessionPortalId);
+            // 2. If no portal from domain, try query parameter (for testing/preview)
+            if (!$portal && $request->has('portal')) {
+                $slug = $request->query('portal');
+                $portal = \App\Models\Portal::where('slug', $slug)->where('activo', true)->first();
             }
-        }
 
-        // 4. Fallback: if only one active portal exists, use it
-        if (!$portal) {
-            $activePortals = \App\Models\Portal::where('activo', true)->get();
-            if ($activePortals->count() === 1) {
-                $portal = $activePortals->first();
+            // 3. If still no portal and user is logged in, check session
+            if (!$portal && auth()->check()) {
+                $sessionPortalId = session('current_portal_id');
+                if ($sessionPortalId) {
+                    $portal = \App\Models\Portal::find($sessionPortalId);
+                }
             }
+
+            // 4. Fallback: if only one active portal exists, use it
+            if (!$portal) {
+                $activePortals = \App\Models\Portal::where('activo', true)->get();
+                if ($activePortals->count() === 1) {
+                    $portal = $activePortals->first();
+                }
+            }
+        } catch (\Exception $e) {
+            // Table doesn't exist yet - migrations pending, continue without portal context
+            $portal = null;
         }
 
         // Set portal in context
