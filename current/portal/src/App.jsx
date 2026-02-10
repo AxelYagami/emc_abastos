@@ -24,6 +24,22 @@ const MarketHeader = lazy(() => import('./templates/market_v2/MarketHeader'))
 const MarketHome = lazy(() => import('./templates/market_v2/MarketHome'))
 const MarketFooter = lazy(() => import('./templates/market_v2/MarketFooter'))
 
+const ClassicHeader = lazy(() => import('./templates/classic/ClassicHeader'))
+const ClassicHome = lazy(() => import('./templates/classic/ClassicHome'))
+const ClassicFooter = lazy(() => import('./templates/classic/ClassicFooter'))
+
+const ModernHeader = lazy(() => import('./templates/modern/ModernHeader'))
+const ModernHome = lazy(() => import('./templates/modern/ModernHome'))
+const ModernFooter = lazy(() => import('./templates/modern/ModernFooter'))
+
+const MinimalHeader = lazy(() => import('./templates/minimal/MinimalHeader'))
+const MinimalHome = lazy(() => import('./templates/minimal/MinimalHome'))
+const MinimalFooter = lazy(() => import('./templates/minimal/MinimalFooter'))
+
+const BoldHeader = lazy(() => import('./templates/bold/BoldHeader'))
+const BoldHome = lazy(() => import('./templates/bold/BoldHome'))
+const BoldFooter = lazy(() => import('./templates/bold/BoldFooter'))
+
 // Shared pages (same across templates)
 import Stores from './pages/Stores'
 import Promos from './pages/Promos'
@@ -40,6 +56,26 @@ const TEMPLATES = {
     Header: MarketHeader,
     Home: MarketHome,
     Footer: MarketFooter,
+  },
+  classic: {
+    Header: ClassicHeader,
+    Home: ClassicHome,
+    Footer: ClassicFooter,
+  },
+  modern: {
+    Header: ModernHeader,
+    Home: ModernHome,
+    Footer: ModernFooter,
+  },
+  minimal: {
+    Header: MinimalHeader,
+    Home: MinimalHome,
+    Footer: MinimalFooter,
+  },
+  bold: {
+    Header: BoldHeader,
+    Home: BoldHome,
+    Footer: BoldFooter,
   },
 }
 
