@@ -898,14 +898,34 @@ class ImportExportController extends Controller
     }
 
     /**
-     * Get empresas list for superadmin selector.
-     * Returns null for non-superadmin users.
+     * Get portales list for superadmin/multi-access selector.
      */
-    private function getEmpresasForUser(): ?object
+    private function getPortalesForUser(): ?object
     {
         $user = auth()->user();
         if ($user->isSuperAdmin()) {
-            return Empresa::where('activa', true)->orderBy('nombre')->get();
+            return \App\Models\Portal::where('activo', true)->orderBy('nombre')->get();
+        }
+        // For multi-access admins, get portales from their empresas
+        $portalIds = $user->empresas()->whereNotNull('portal_id')->pluck('portal_id')->unique();
+        if ($portalIds->count() > 1) {
+            return \App\Models\Portal::whereIn('id', $portalIds)->where('activo', true)->orderBy('nombre')->get();
+        }
+        return null;
+    }
+
+    /**
+     * Get empresas list filtered by portal.
+     */
+    private function getEmpresasForUser(?int $portalId = null): ?object
+    {
+        $user = auth()->user();
+        if ($user->isSuperAdmin()) {
+            $query = Empresa::where('activa', true);
+            if ($portalId) {
+                $query->where('portal_id', $portalId);
+            }
+            return $query->orderBy('nombre')->get();
         }
         return null;
     }
