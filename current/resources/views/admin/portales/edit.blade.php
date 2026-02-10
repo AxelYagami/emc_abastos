@@ -69,10 +69,28 @@
         <!-- Template -->
         <div class="bg-white rounded-lg shadow p-6">
             <h2 class="text-lg font-semibold text-gray-800 mb-4">Template del Portal</h2>
-            <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <label class="relative cursor-pointer">
+                    <input type="radio" name="active_template" value="default" 
+                           {{ ($portal->active_template ?? 'classic') === 'default' ? 'checked' : '' }} class="peer sr-only">
+                    <div class="border-2 rounded-xl p-4 transition-all peer-checked:border-green-500 peer-checked:bg-green-50 hover:border-gray-300">
+                        <div class="w-full h-16 bg-gradient-to-br from-green-400 to-green-600 rounded-lg mb-3"></div>
+                        <span class="font-semibold text-gray-800 block">Default</span>
+                        <p class="text-xs text-gray-500">Hero gradiente verde</p>
+                    </div>
+                </label>
+                <label class="relative cursor-pointer">
+                    <input type="radio" name="active_template" value="market_v2"
+                           {{ ($portal->active_template ?? 'classic') === 'market_v2' ? 'checked' : '' }} class="peer sr-only">
+                    <div class="border-2 rounded-xl p-4 transition-all peer-checked:border-indigo-500 peer-checked:bg-indigo-50 hover:border-gray-300">
+                        <div class="w-full h-16 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg mb-3"></div>
+                        <span class="font-semibold text-gray-800 block">Market v2</span>
+                        <p class="text-xs text-gray-500">Marketplace premium</p>
+                    </div>
+                </label>
                 <label class="relative cursor-pointer">
                     <input type="radio" name="active_template" value="classic" 
-                           {{ ($portal->active_template ?? 'default') === 'classic' ? 'checked' : '' }} class="peer sr-only">
+                           {{ ($portal->active_template ?? 'classic') === 'classic' ? 'checked' : '' }} class="peer sr-only">
                     <div class="border-2 rounded-xl p-4 transition-all peer-checked:border-green-500 peer-checked:bg-green-50 hover:border-gray-300">
                         <div class="w-full h-16 bg-gradient-to-br from-green-500 to-green-600 rounded-lg mb-3 flex items-end p-2">
                             <div class="flex gap-1"><div class="w-3 h-3 bg-white/80 rounded"></div><div class="w-3 h-3 bg-white/60 rounded"></div><div class="w-3 h-3 bg-white/40 rounded"></div></div>
@@ -83,7 +101,7 @@
                 </label>
                 <label class="relative cursor-pointer">
                     <input type="radio" name="active_template" value="modern"
-                           {{ ($portal->active_template ?? 'default') === 'modern' ? 'checked' : '' }} class="peer sr-only">
+                           {{ ($portal->active_template ?? 'classic') === 'modern' ? 'checked' : '' }} class="peer sr-only">
                     <div class="border-2 rounded-xl p-4 transition-all peer-checked:border-emerald-500 peer-checked:bg-emerald-50 hover:border-gray-300">
                         <div class="w-full h-16 bg-gradient-to-br from-gray-800 to-gray-900 rounded-lg mb-3 flex items-end p-2">
                             <div class="flex gap-1"><div class="w-3 h-3 bg-emerald-400 rounded"></div><div class="w-3 h-3 bg-emerald-300 rounded"></div><div class="w-3 h-3 bg-emerald-200 rounded"></div></div>
@@ -94,7 +112,7 @@
                 </label>
                 <label class="relative cursor-pointer">
                     <input type="radio" name="active_template" value="minimal"
-                           {{ ($portal->active_template ?? 'default') === 'minimal' ? 'checked' : '' }} class="peer sr-only">
+                           {{ ($portal->active_template ?? 'classic') === 'minimal' ? 'checked' : '' }} class="peer sr-only">
                     <div class="border-2 rounded-xl p-4 transition-all peer-checked:border-gray-400 peer-checked:bg-gray-50 hover:border-gray-300">
                         <div class="w-full h-16 bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg mb-3 flex items-center justify-center">
                             <div class="flex gap-1"><div class="w-2 h-6 bg-gray-300 rounded"></div><div class="w-2 h-6 bg-gray-400 rounded"></div><div class="w-2 h-6 bg-gray-300 rounded"></div></div>
@@ -105,7 +123,7 @@
                 </label>
                 <label class="relative cursor-pointer">
                     <input type="radio" name="active_template" value="bold"
-                           {{ ($portal->active_template ?? 'default') === 'bold' ? 'checked' : '' }} class="peer sr-only">
+                           {{ ($portal->active_template ?? 'classic') === 'bold' ? 'checked' : '' }} class="peer sr-only">
                     <div class="border-2 rounded-xl p-4 transition-all peer-checked:border-orange-500 peer-checked:bg-orange-50 hover:border-gray-300">
                         <div class="w-full h-16 bg-gradient-to-br from-orange-400 to-rose-500 rounded-lg mb-3 flex items-end p-2">
                             <div class="flex gap-1"><div class="w-3 h-3 bg-white/80 rounded-full"></div><div class="w-3 h-3 bg-white/60 rounded-full"></div><div class="w-3 h-3 bg-white/40 rounded-full"></div></div>
