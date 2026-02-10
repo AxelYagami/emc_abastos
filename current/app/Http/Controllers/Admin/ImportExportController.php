@@ -289,7 +289,6 @@ class ImportExportController extends Controller
             $csv .= $this->csvEncode($p->nombre) . ',';
             $csv .= $this->csvEncode($p->descripcion) . ',';
             $csv .= number_format($p->precio, 2, '.', '') . ',';
-            $csv .= $this->csvEncode($p->unidad) . ',';
             $csv .= $this->csvEncode($p->categoria?->nombre) . ',';
             $csv .= ($p->activo ? '1' : '0') . "\n";
         }
