@@ -442,9 +442,11 @@ class ImportExportController extends Controller
 
     public function clientesIndex(Request $request)
     {
-        $empresas = $this->getEmpresasForUser();
+        $portales = $this->getPortalesForUser();
+        $portalId = $request->filled('portal_id') ? (int)$request->input('portal_id') : null;
+        $empresas = $this->getEmpresasForUser($portalId);
         $empresaId = $this->resolveEmpresaId($request);
-        return view('admin.import-export.clientes', compact('empresas', 'empresaId'));
+        return view('admin.import-export.clientes', compact('portales', 'portalId', 'empresas', 'empresaId'));
     }
 
     public function clientesTemplate()
