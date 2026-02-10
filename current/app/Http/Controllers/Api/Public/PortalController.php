@@ -290,8 +290,15 @@ class PortalController extends Controller
      */
     public function products(Request $request)
     {
+        $portal = $this->resolvePortal($request);
+        
         $query = \App\Models\Producto::where('activo', true)
-            ->whereHas('empresa', fn($q) => $q->where('activa', true)->whereNotNull('handle'))
+            ->whereHas('empresa', function($q) use ($portal) {
+                $q->where('activa', true)->whereNotNull('handle');
+                if ($portal) {
+                    $q->where('portal_id', $portal->id);
+                }
+            })
             ->with(['empresa', 'categoria']);
 
         // Search
