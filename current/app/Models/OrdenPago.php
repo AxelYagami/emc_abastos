@@ -3,12 +3,9 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use App\Traits\BelongsToPortal;
 
 class OrdenPago extends Model
 {
-    use BelongsToPortal;
-
     protected $table = 'orden_pagos';
     protected $guarded = [];
 
