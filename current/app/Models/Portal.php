@@ -14,6 +14,9 @@ class Portal extends Model
     protected $casts = [
         'settings' => 'array',
         'activo' => 'boolean',
+        'flyer_enabled' => 'boolean',
+        'show_prices_in_portal' => 'boolean',
+        'ai_assistant_enabled' => 'boolean',
     ];
 
     public function empresas(): HasMany
