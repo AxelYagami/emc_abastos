@@ -16,7 +16,7 @@ class EmpresasController extends Controller
 {
     public function index()
     {
-        $empresas = Empresa::orderBy('nombre')->get();
+        $empresas = Empresa::with('portal')->orderBy('nombre')->get();
         return view('admin.empresas.index', compact('empresas'));
     }
 
