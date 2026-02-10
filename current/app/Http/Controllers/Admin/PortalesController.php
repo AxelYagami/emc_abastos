@@ -58,8 +58,9 @@ class PortalesController extends Controller
         }
 
         // Handle logo upload
+        $logoPath = null;
         if ($request->hasFile('logo')) {
-            $data['logo_path'] = $request->file('logo')->store('portales/logos', 'public');
+            $logoPath = $request->file('logo')->store('portales/logos', 'public');
         }
 
         // Handle booleans
@@ -73,6 +74,14 @@ class PortalesController extends Controller
         $data['flyer_max_per_store'] = $data['flyer_max_per_store'] ?? 5;
         $data['promos_per_store'] = $data['promos_per_store'] ?? 1;
         $data['home_redirect_path'] = $data['home_redirect_path'] ?? 'portal';
+
+        // Remove 'logo' from data (we use logo_path)
+        unset($data['logo']);
+        
+        // Add logo_path if uploaded
+        if ($logoPath) {
+            $data['logo_path'] = $logoPath;
+        }
 
         Portal::create($data);
 
