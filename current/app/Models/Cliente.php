@@ -19,6 +19,11 @@ class Cliente extends Model
         return $this->belongsTo(Empresa::class, 'empresa_id');
     }
 
+    public function portal()
+    {
+        return $this->belongsTo(Portal::class, 'portal_id');
+    }
+
     public function ordenes()
     {
         return $this->hasMany(Orden::class, 'cliente_id');
