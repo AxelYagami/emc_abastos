@@ -160,7 +160,20 @@ class EmpresasController extends Controller
 
         $data = $request->validate([
             'portal_id' => 'nullable|exists:portales,id',
-            'nombre' => 'required|string|max:160',
+            'nombre' => [
+                'required',
+                'string',
+                'max:160',
+                function ($attribute, $value, $fail) use ($request, $id) {
+                    $exists = \App\Models\Empresa::where('nombre', $value)
+                        ->where('portal_id', $request->input('portal_id'))
+                        ->where('id', '!=', $id)
+                        ->exists();
+                    if ($exists) {
+                        $fail('Ya existe una empresa con este nombre en el portal seleccionado.');
+                    }
+                },
+            ],
             'slug' => 'nullable|string|max:120|unique:empresas,slug,' . $id,
             'handle' => 'nullable|string|max:120|unique:empresas,handle,' . $id,
             'brand_nombre_publico' => 'nullable|string|max:200',
