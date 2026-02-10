@@ -44,6 +44,18 @@
 
             <!-- Branding Tab -->
             <div x-show="tab === 'branding'" class="p-6 space-y-4">
+                {{-- Portal selector --}}
+                <div class="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                    <label class="block text-sm font-medium text-blue-800 mb-1">Portal asignado</label>
+                    <select name="portal_id" class="w-full px-3 py-2 border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white">
+                        <option value="">-- Sin portal (global) --</option>
+                        @foreach(\App\Models\Portal::where('activo', true)->orderBy('nombre')->get() as $portal)
+                        <option value="{{ $portal->id }}" {{ $empresa->portal_id == $portal->id ? 'selected' : '' }}>{{ $portal->nombre }}</option>
+                        @endforeach
+                    </select>
+                    <p class="text-xs text-blue-600 mt-1">La empresa aparecera solo en el portal seleccionado</p>
+                </div>
+
                 <div class="grid md:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Nombre interno *</label>
