@@ -4,9 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
+use App\Traits\BelongsToPortal;
 
 class StorePromotion extends Model
 {
+    use BelongsToPortal;
+
     protected $table = 'store_promotions';
     protected $guarded = [];
 
