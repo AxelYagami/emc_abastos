@@ -135,8 +135,9 @@ class ImportExportController extends Controller
 
         $validRows = array_filter($rows, fn($r) => empty($r['_errors']));
         $invalidRows = array_filter($rows, fn($r) => !empty($r['_errors']));
+        $parseErrors = $errors; // Rename to avoid conflict with Laravel's $errors
 
-        return view('admin.import-export.productos-preview', compact('rows', 'validRows', 'invalidRows', 'errors', 'categorias'));
+        return view('admin.import-export.productos-preview', compact('rows', 'validRows', 'invalidRows', 'parseErrors', 'categorias'));
     }
 
     public function productosImport(Request $request)
