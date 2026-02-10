@@ -129,6 +129,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'empresa', 'role:adm
     Route::middleware('role:superadmin')->group(function () {
         // Portales CRUD (multi-portal)
         Route::resource('portales', \App\Http\Controllers\Admin\PortalesController::class);
+        Route::post('portales/switch', [\App\Http\Controllers\Admin\PortalesController::class, 'switchPortal'])->name('portales.switch');
 
         // Portal Config
         Route::get('portal', [PortalConfigController::class, 'index'])->name('portal.config');
