@@ -70,7 +70,7 @@ class PortalesController extends Controller
         $data['ai_assistant_enabled'] = $request->boolean('ai_assistant_enabled');
 
         // Set defaults
-        $data['active_template'] = $data['active_template'] ?? 'default';
+        $data['active_template'] = $data['active_template'] ?? 'classic';
         $data['flyer_max_per_store'] = $data['flyer_max_per_store'] ?? 5;
         $data['promos_per_store'] = $data['promos_per_store'] ?? 1;
         $data['home_redirect_path'] = $data['home_redirect_path'] ?? 'portal';
