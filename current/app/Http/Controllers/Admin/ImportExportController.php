@@ -208,10 +208,6 @@ class ImportExportController extends Controller
                 $producto->precio = (float) ($row['precio'] ?? 0);
                 $producto->activo = $this->parseBool($row['activo'] ?? '1');
 
-                if (isset($row['unidad'])) {
-                    $producto->unidad = trim($row['unidad']) ?: null;
-                }
-
                 // Map categoria
                 $catName = trim($row['categoria_nombre'] ?? '');
                 if (!empty($catName)) {
