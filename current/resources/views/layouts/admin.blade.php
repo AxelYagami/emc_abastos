@@ -10,11 +10,12 @@
     $logoUrl = $empresa ? $empresa->getLogoUrl() : asset('storage/brand/logo-iados.png');
     $isSuperAdmin = auth()->user()?->isSuperAdmin() ?? false;
 
-    // Get user's empresas for switcher (sin filtro de portal para la lista)
+    // Get user's empresas for switcher
     $userEmpresas = collect();
     if (auth()->check()) {
         if ($isSuperAdmin) {
-            $userEmpresas = \App\Models\Empresa::withoutPortalScope()->where('activa', true)->orderBy('nombre')->get();
+            // Superadmin ve todas las empresas (scope no filtra si no hay portal en sesión)
+            $userEmpresas = \App\Models\Empresa::where('activa', true)->orderBy('nombre')->get();
         } else {
             $userEmpresas = auth()->user()->empresas()
                 ->where('empresas.activa', true)
