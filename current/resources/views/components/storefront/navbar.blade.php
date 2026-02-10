@@ -104,10 +104,12 @@
          x-transition:leave-end="opacity-0 -translate-y-2"
          class="md:hidden border-t border-slate-200 bg-white">
         <div class="px-4 py-4 space-y-2">
+            @if($portalUrl)
             <a href="{{ $portalUrl }}"
                class="block px-4 py-3 rounded-xl text-slate-700 hover:bg-slate-100 font-medium transition-all">
                 Portal
             </a>
+            @endif
             @auth
                 <a href="{{ route('admin.dashboard') }}"
                    class="block px-4 py-3 rounded-xl text-slate-700 hover:bg-slate-100 font-medium transition-all">
