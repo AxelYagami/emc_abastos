@@ -85,11 +85,9 @@ class ProductImageService
      */
     protected function fetchFromUnsplash(string $searchTerm, string $category, int $productId): string
     {
-        // Use Unsplash Source for reliable, free images
-        // Combine product name + category for better results
-        $query = "{$searchTerm},{$category},food";
-        $seed = md5($searchTerm . $category . $productId);
-        return "https://source.unsplash.com/400x300/?{$query}&sig={$seed}";
+        // Use Picsum for reliable placeholder images (Unsplash Source deprecated)
+        $seed = abs(crc32($searchTerm . $category . $productId));
+        return "https://picsum.photos/seed/{$seed}/400/300";
     }
 
     /**
