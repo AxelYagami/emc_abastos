@@ -1,5 +1,16 @@
 @props(['appName', 'logoUrl', 'primaryColor'])
 
+@php
+    // Get current store's portal for navigation
+    $currentStore = $currentStore ?? null;
+    $portalUrl = url('/portal'); // Default
+    
+    if ($currentStore && $currentStore->portal) {
+        // Use portal slug for URL
+        $portalUrl = url('/portal?portal=' . $currentStore->portal->slug);
+    }
+@endphp
+
 <header class="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-slate-200/80 shadow-sm">
     <div class="w-full px-4 sm:px-6 lg:px-8">
         <div class="flex items-center justify-between h-16 lg:h-20">
@@ -15,9 +26,9 @@
 
             <!-- Desktop Navigation -->
             <nav class="hidden md:flex items-center gap-1">
-                <a href="{{ route('store.home') }}"
+                <a href="{{ $portalUrl }}"
                    class="px-4 py-2 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100 font-medium transition-all">
-                    Tienda
+                    Portal
                 </a>
 
                 @auth
@@ -57,11 +68,6 @@
                        class="hidden sm:flex px-4 py-2.5 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100 font-medium transition-all">
                         Ingresar
                     </a>
-                    <a href="{{ route('register') }}"
-                       class="hidden sm:flex px-4 py-2.5 rounded-xl font-semibold border-2 transition-all hover-lift"
-                       style="border-color: {{ $primaryColor }}; color: {{ $primaryColor }};">
-                        Registrarse
-                    </a>
                 @else
                     <form method="POST" action="{{ route('logout') }}" class="hidden sm:block">
                         @csrf
@@ -96,9 +102,9 @@
          x-transition:leave-end="opacity-0 -translate-y-2"
          class="md:hidden border-t border-slate-200 bg-white">
         <div class="px-4 py-4 space-y-2">
-            <a href="{{ route('store.home') }}"
+            <a href="{{ $portalUrl }}"
                class="block px-4 py-3 rounded-xl text-slate-700 hover:bg-slate-100 font-medium transition-all">
-                Tienda
+                Portal
             </a>
             @auth
                 <a href="{{ route('admin.dashboard') }}"
@@ -122,11 +128,6 @@
                 <a href="{{ route('login') }}"
                    class="block px-4 py-3 rounded-xl text-slate-700 hover:bg-slate-100 font-medium transition-all">
                     Ingresar
-                </a>
-                <a href="{{ route('register') }}"
-                   class="block px-4 py-3 rounded-xl font-semibold text-center transition-all"
-                   style="background-color: {{ $primaryColor }}; color: white;">
-                    Crear cuenta
                 </a>
             @endauth
         </div>
