@@ -16,7 +16,15 @@ class EmpresasController extends Controller
 {
     public function index()
     {
-        $empresas = Empresa::with('portal')->orderBy('nombre')->get();
+        $query = Empresa::with('portal')->orderBy('nombre');
+        
+        // Filter by current portal if selected
+        $currentPortalId = session('current_portal_id');
+        if ($currentPortalId) {
+            $query->where('portal_id', $currentPortalId);
+        }
+        
+        $empresas = $query->get();
         return view('admin.empresas.index', compact('empresas'));
     }
 
