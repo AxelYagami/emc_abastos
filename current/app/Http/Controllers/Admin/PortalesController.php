@@ -24,7 +24,7 @@ class PortalesController extends Controller
     public function store(Request $request)
     {
         $data = $request->validate([
-            'nombre' => 'required|string|max:200',
+            'nombre' => 'required|string|max:200|unique:portales,nombre',
             'slug' => 'nullable|string|max:100|unique:portales,slug',
             'dominio' => 'nullable|string|max:255',
             'tagline' => 'nullable|string|max:300',
