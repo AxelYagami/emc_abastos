@@ -80,8 +80,7 @@
                :class="{ 'lg:w-64': sidebarOpen, 'lg:w-20': !sidebarOpen, '-translate-x-full lg:translate-x-0': !mobileMenuOpen }">
             <div class="p-4 border-b border-primary-700/50">
                 <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-3">
-                    @if($logoUrl)
-                        <img src="{{ $logoUrl }}" alt="{{ $empresaNombreInterno }}" class="w-10 h-10 rounded-lg object-cover flex-shrink-0">
+                    <img src="{{ $logoUrl ?: $defaultLogo }}" alt="{{ $empresaNombreInterno }}" class="w-10 h-10 rounded-lg object-cover flex-shrink-0" onerror="this.src='https://ui-avatars.com/api/?name={{ urlencode($empresaNombreInterno) }}&background=16a34a&color=fff&size=80'">
                     @else
                         <div class="w-10 h-10 bg-white rounded-lg flex items-center justify-center flex-shrink-0">
                             <svg class="w-6 h-6 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
