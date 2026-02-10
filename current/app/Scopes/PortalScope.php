@@ -10,6 +10,11 @@ use App\Services\PortalContextService;
 class PortalScope implements Scope
 {
     /**
+     * Cache for column checks to avoid repeated schema queries
+     */
+    protected static array $columnCache = [];
+
+    /**
      * Apply the scope to a given Eloquent query builder.
      *
      * El scope filtra automáticamente los registros por el portal_id del contexto actual.
@@ -26,24 +31,51 @@ class PortalScope implements Scope
             return;
         }
 
+        $table = $model->getTable();
+
         // Si el modelo tiene directamente portal_id
-        if ($this->hasColumn($model, 'portal_id')) {
-            $builder->where($model->getTable() . '.portal_id', $portalId);
+        if ($this->hasColumn($model, $table, 'portal_id')) {
+            $builder->where("{$table}.portal_id", $portalId);
         }
         // Si el modelo tiene empresa_id, filtramos a través de la empresa
-        elseif ($this->hasColumn($model, 'empresa_id')) {
+        elseif ($this->hasColumn($model, $table, 'empresa_id')) {
             $builder->whereHas('empresa', function ($query) use ($portalId) {
-                $query->where('portal_id', $portalId);
+                $query->withoutGlobalScope(self::class)->where('empresas.portal_id', $portalId);
             });
         }
     }
 
     /**
-     * Check if model has a specific column
+     * Check if model has a specific column (with caching)
      */
-    protected function hasColumn(Model $model, string $column): bool
+    protected function hasColumn(Model $model, string $table, string $column): bool
     {
-        return in_array($column, $model->getFillable()) 
-            || $model->getConnection()->getSchemaBuilder()->hasColumn($model->getTable(), $column);
+        $cacheKey = "{$table}.{$column}";
+        
+        if (!isset(static::$columnCache[$cacheKey])) {
+            // First check fillable (fast)
+            if (in_array($column, $model->getFillable())) {
+                static::$columnCache[$cacheKey] = true;
+            } else {
+                // Fallback to schema check (slower, but cached)
+                try {
+                    static::$columnCache[$cacheKey] = $model->getConnection()
+                        ->getSchemaBuilder()
+                        ->hasColumn($table, $column);
+                } catch (\Exception $e) {
+                    static::$columnCache[$cacheKey] = false;
+                }
+            }
+        }
+        
+        return static::$columnCache[$cacheKey];
+    }
+
+    /**
+     * Clear the column cache (useful for testing)
+     */
+    public static function clearColumnCache(): void
+    {
+        static::$columnCache = [];
     }
 }
