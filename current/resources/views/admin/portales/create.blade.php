@@ -65,7 +65,23 @@
         <!-- Template -->
         <div class="bg-white rounded-lg shadow p-6">
             <h2 class="text-lg font-semibold text-gray-800 mb-4">Template del Portal</h2>
-            <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <label class="relative cursor-pointer">
+                    <input type="radio" name="active_template" value="default" class="peer sr-only">
+                    <div class="border-2 rounded-xl p-4 transition-all peer-checked:border-green-500 peer-checked:bg-green-50 hover:border-gray-300">
+                        <div class="w-full h-16 bg-gradient-to-br from-green-400 to-green-600 rounded-lg mb-3"></div>
+                        <span class="font-semibold text-gray-800 block">Default</span>
+                        <p class="text-xs text-gray-500">Hero gradiente verde</p>
+                    </div>
+                </label>
+                <label class="relative cursor-pointer">
+                    <input type="radio" name="active_template" value="market_v2" class="peer sr-only">
+                    <div class="border-2 rounded-xl p-4 transition-all peer-checked:border-indigo-500 peer-checked:bg-indigo-50 hover:border-gray-300">
+                        <div class="w-full h-16 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg mb-3"></div>
+                        <span class="font-semibold text-gray-800 block">Market v2</span>
+                        <p class="text-xs text-gray-500">Marketplace premium</p>
+                    </div>
+                </label>
                 <label class="relative cursor-pointer">
                     <input type="radio" name="active_template" value="classic" checked class="peer sr-only">
                     <div class="border-2 rounded-xl p-4 transition-all peer-checked:border-green-500 peer-checked:bg-green-50 hover:border-gray-300">
