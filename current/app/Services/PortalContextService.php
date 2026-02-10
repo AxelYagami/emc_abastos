@@ -83,27 +83,32 @@ class PortalContextService
         // Remove port if present
         $domain = preg_replace('/:\d+$/', '', $domain);
         
-        // Check cache first
-        return Cache::remember("portal_domain:{$domain}", self::CACHE_TTL, function () use ($domain) {
-            // Try exact domain match
-            $portal = Portal::where('dominio', $domain)->where('activo', true)->first();
-            
-            if ($portal) {
-                return $portal;
-            }
-
-            // Try subdomain match (e.g., portal1.example.com -> portal1)
-            $parts = explode('.', $domain);
-            if (count($parts) >= 2) {
-                $subdomain = $parts[0];
-                $portal = Portal::where('slug', $subdomain)->where('activo', true)->first();
+        try {
+            // Check cache first
+            return Cache::remember("portal_domain:{$domain}", self::CACHE_TTL, function () use ($domain) {
+                // Try exact domain match
+                $portal = Portal::where('dominio', $domain)->where('activo', true)->first();
+                
                 if ($portal) {
                     return $portal;
                 }
-            }
 
+                // Try subdomain match (e.g., portal1.example.com -> portal1)
+                $parts = explode('.', $domain);
+                if (count($parts) >= 2) {
+                    $subdomain = $parts[0];
+                    $portal = Portal::where('slug', $subdomain)->where('activo', true)->first();
+                    if ($portal) {
+                        return $portal;
+                    }
+                }
+
+                return null;
+            });
+        } catch (\Exception $e) {
+            // Table doesn't exist yet - return null
             return null;
-        });
+        }
     }
 
     /**
