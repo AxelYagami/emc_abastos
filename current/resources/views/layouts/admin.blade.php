@@ -10,11 +10,11 @@
     $logoUrl = $empresa ? $empresa->getLogoUrl() : asset('storage/brand/logo-iados.png');
     $isSuperAdmin = auth()->user()?->isSuperAdmin() ?? false;
 
-    // Get user's empresas for switcher
+    // Get user's empresas for switcher (sin filtro de portal para la lista)
     $userEmpresas = collect();
     if (auth()->check()) {
         if ($isSuperAdmin) {
-            $userEmpresas = \App\Models\Empresa::where('activa', true)->orderBy('nombre')->get();
+            $userEmpresas = \App\Models\Empresa::withoutPortalScope()->where('activa', true)->orderBy('nombre')->get();
         } else {
             $userEmpresas = auth()->user()->empresas()
                 ->where('empresas.activa', true)
@@ -27,6 +27,11 @@
     if ($userEmpresas->isEmpty() && $empresa) {
         $userEmpresas = collect([$empresa]);
     }
+
+    // Portal context for superadmin
+    $currentPortalId = session('current_portal_id');
+    $currentPortal = $currentPortalId ? \App\Models\Portal::find($currentPortalId) : null;
+    $allPortales = $isSuperAdmin ? \App\Models\Portal::where('activo', true)->orderBy('nombre')->get() : collect();
 @endphp
 <!doctype html>
 <html lang="es">
