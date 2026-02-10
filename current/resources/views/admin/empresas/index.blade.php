@@ -22,6 +22,7 @@
                 <tr>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Logo</th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nombre</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Portal</th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Slug</th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Estado</th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">MercadoPago</th>
@@ -46,6 +47,13 @@
                         <div class="font-medium text-gray-900">{{ $empresa->nombre }}</div>
                         @if($empresa->brand_nombre_publico)
                             <div class="text-sm text-gray-500">{{ $empresa->brand_nombre_publico }}</div>
+                        @endif
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        @if($empresa->portal)
+                            <span class="px-2 py-1 text-xs font-medium rounded-full bg-purple-100 text-purple-700">{{ $empresa->portal->nombre }}</span>
+                        @else
+                            <span class="px-2 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-500">Global</span>
                         @endif
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap">
@@ -77,7 +85,7 @@
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="6" class="px-6 py-8 text-center text-gray-500">
+                    <td colspan="7" class="px-6 py-8 text-center text-gray-500">
                         No hay empresas registradas
                     </td>
                 </tr>
