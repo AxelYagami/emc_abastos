@@ -67,7 +67,6 @@ class ProductosController extends Controller
             'imagen' => ['nullable','image','max:2048'],
             'imagen_url' => ['nullable','url'],
             'image_source' => ['nullable','in:manual,auto,default'],
-            'is_featured' => ['nullable','boolean'],
         ]);
 
         if (!empty($data['categoria_id'])) {
