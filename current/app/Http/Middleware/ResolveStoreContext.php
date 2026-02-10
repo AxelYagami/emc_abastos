@@ -28,14 +28,14 @@ class ResolveStoreContext
             $subdomain = $this->extractSubdomain($host, $baseDomain);
             if ($subdomain && $subdomain !== 'www' && $subdomain !== 'portal') {
                 // Try to find by handle (subdomain = handle)
-                $store = Empresa::where('handle', $subdomain)
+                $store = Empresa::with('portal')->where('handle', $subdomain)
                     ->where('activa', true)
                     ->first();
                 
                 // Or try StoreDomain
                 if (!$store) {
                     $storeDomain = StoreDomain::findByDomain($host);
-                    $store = $storeDomain?->empresa;
+                    $store = $storeDomain?->empresa?->load('portal');
                 }
             }
         }
@@ -43,22 +43,22 @@ class ResolveStoreContext
         // 2. Try custom domain (tienda.com)
         if (!$store && !$this->isMainAppDomain($host)) {
             $storeDomain = StoreDomain::findByDomain($host);
-            $store = $storeDomain?->empresa;
+            $store = $storeDomain?->empresa?->load('portal');
             
             // Or find by domain directly on empresa
             if (!$store) {
-                $store = Empresa::findByDomain($host);
+                $store = Empresa::findByDomain($host)?->load('portal');
             }
         }
 
         // 3. Try handle from route parameter (/t/{handle})
         if (!$store && $request->route('handle')) {
-            $store = Empresa::findByHandle($request->route('handle'));
+            $store = Empresa::findByHandle($request->route('handle'))?->load('portal');
         }
 
         // 4. Fallback to session (backward compatibility)
         if (!$store && session('empresa_id')) {
-            $store = Empresa::find(session('empresa_id'));
+            $store = Empresa::with('portal')->find(session('empresa_id'));
         }
 
         // Set store context
