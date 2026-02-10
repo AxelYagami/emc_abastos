@@ -7,24 +7,40 @@ use App\Http\Controllers\Admin\Traits\AdminContext;
 use App\Models\Cliente;
 use App\Models\Empresa;
 use App\Models\Orden;
+use App\Models\Portal;
 use Illuminate\Http\Request;
 
 class ClientesController extends Controller
 {
     use AdminContext;
 
+    /**
+     * Get portal_id from current empresa or session
+     */
+    private function resolvePortalId(Request $request): ?int
+    {
+        $empresaId = $this->resolveEmpresaId($request);
+        $empresa = Empresa::find($empresaId);
+        return $empresa?->portal_id ?? session('current_portal_id');
+    }
+
     public function index(Request $request)
     {
         $empresaId = $this->resolveEmpresaId($request);
+        $portalId = $this->resolvePortalId($request);
         $search = trim((string)$request->get('q',''));
 
         $q = Cliente::orderByDesc('id');
 
-        // Superadmin: show all or filter by empresa
-        if ($this->isSuperAdmin() && !$request->filled('empresa_id')) {
+        // Filter by portal (clientes are shared across portal)
+        if ($this->isSuperAdmin()) {
+            if ($portalId) {
+                $q->where('portal_id', $portalId);
+            }
             $q->with('empresa');
         } else {
-            $q->where('empresa_id', $empresaId);
+            // Non-superadmin: filter by their portal
+            $q->where('portal_id', $portalId);
         }
 
         if ($search !== '') {
@@ -50,6 +66,7 @@ class ClientesController extends Controller
     public function store(Request $request)
     {
         $empresaId = $this->resolveEmpresaId($request);
+        $portalId = $this->resolvePortalId($request);
 
         $data = $request->validate([
             'nombre' => ['required', 'string', 'max:200'],
@@ -62,6 +79,7 @@ class ClientesController extends Controller
 
         $cliente = new Cliente();
         $cliente->empresa_id = $empresaId;
+        $cliente->portal_id = $portalId;
         $cliente->nombre = $data['nombre'];
         $cliente->whatsapp = $data['whatsapp'] ?? null;
         $cliente->email = $data['email'] ?? null;
@@ -75,23 +93,23 @@ class ClientesController extends Controller
 
     public function show(Request $request, int $id)
     {
-        $empresaId = $this->resolveEmpresaId($request);
-        $cliente = Cliente::where('empresa_id',$empresaId)->findOrFail($id);
-        $ordenes = Orden::where('empresa_id',$empresaId)->where('cliente_id',$cliente->id)->orderByDesc('id')->limit(50)->get();
+        $portalId = $this->resolvePortalId($request);
+        $cliente = Cliente::where('portal_id', $portalId)->findOrFail($id);
+        $ordenes = Orden::where('cliente_id', $cliente->id)->orderByDesc('id')->limit(50)->get();
         return view('admin.clientes.show', compact('cliente','ordenes'));
     }
 
     public function edit(Request $request, int $id)
     {
-        $empresaId = $this->resolveEmpresaId($request);
-        $cliente = Cliente::where('empresa_id', $empresaId)->findOrFail($id);
+        $portalId = $this->resolvePortalId($request);
+        $cliente = Cliente::where('portal_id', $portalId)->findOrFail($id);
         return view('admin.clientes.edit', compact('cliente'));
     }
 
     public function update(Request $request, int $id)
     {
-        $empresaId = $this->resolveEmpresaId($request);
-        $cliente = Cliente::where('empresa_id', $empresaId)->findOrFail($id);
+        $portalId = $this->resolvePortalId($request);
+        $cliente = Cliente::where('portal_id', $portalId)->findOrFail($id);
 
         $data = $request->validate([
             'nombre' => ['required', 'string', 'max:200'],
@@ -115,8 +133,8 @@ class ClientesController extends Controller
 
     public function destroy(Request $request, int $id)
     {
-        $empresaId = $this->resolveEmpresaId($request);
-        $cliente = Cliente::where('empresa_id', $empresaId)->findOrFail($id);
+        $portalId = $this->resolvePortalId($request);
+        $cliente = Cliente::where('portal_id', $portalId)->findOrFail($id);
 
         // Check if cliente has orders
         $ordenesCount = Orden::where('cliente_id', $cliente->id)->count();
@@ -130,8 +148,8 @@ class ClientesController extends Controller
 
     public function toggle(Request $request, int $id)
     {
-        $empresaId = $this->resolveEmpresaId($request);
-        $cliente = Cliente::where('empresa_id',$empresaId)->findOrFail($id);
+        $portalId = $this->resolvePortalId($request);
+        $cliente = Cliente::where('portal_id', $portalId)->findOrFail($id);
         $cliente->enviar_estatus = !$cliente->enviar_estatus;
         $cliente->save();
         return back()->with('ok','Actualizado');
