@@ -69,6 +69,11 @@ class Empresa extends Model
     }
 
     // Relationships
+    public function portal()
+    {
+        return $this->belongsTo(Portal::class, 'portal_id');
+    }
+
     public function categorias()
     {
         return $this->hasMany(Categoria::class, 'empresa_id');
