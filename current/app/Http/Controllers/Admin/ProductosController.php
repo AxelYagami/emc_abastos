@@ -87,7 +87,6 @@ class ProductosController extends Controller
         $p->categoria_id = $data['categoria_id'] ?? null;
         $p->image_source = $data['image_source'] ?? 'auto';
         $p->use_auto_image = ($data['image_source'] ?? 'auto') === 'auto';
-        $p->is_featured = $request->boolean('is_featured');
         $p->save();
 
         // Handle image upload
