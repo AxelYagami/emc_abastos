@@ -7,7 +7,8 @@
     $empresaNombreComercial = $empresa?->brand_nombre_publico ?? $empresa?->getSetting('app_name') ?? null;
     
     $appName = $empresa ? $empresa->getAppName() : 'Mercado De Abastos';
-    $logoUrl = $empresa ? $empresa->getLogoUrl() : asset('storage/brand/logo-iados.png');
+    $logoUrl = $empresa ? $empresa->getLogoUrl() : null;
+    $defaultLogo = asset('images/logo-placeholder.svg');
     $isSuperAdmin = auth()->user()?->isSuperAdmin() ?? false;
 
     // Get user's empresas for switcher
