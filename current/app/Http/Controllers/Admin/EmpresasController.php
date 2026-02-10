@@ -29,6 +29,7 @@ class EmpresasController extends Controller
     public function store(Request $request)
     {
         $data = $request->validate([
+            'portal_id' => 'nullable|exists:portales,id',
             'nombre' => 'required|string|max:160',
             'slug' => 'nullable|string|max:120|unique:empresas,slug',
             'brand_nombre_publico' => 'nullable|string|max:200',
@@ -96,6 +97,7 @@ class EmpresasController extends Controller
         ];
 
         $empresa = Empresa::create([
+            'portal_id' => $data['portal_id'] ?? \App\Services\PortalContextService::getCurrentPortalId(),
             'nombre' => $data['nombre'],
             'slug' => $slug,
             'handle' => $handle,
@@ -137,6 +139,7 @@ class EmpresasController extends Controller
         $empresa = Empresa::findOrFail($id);
 
         $data = $request->validate([
+            'portal_id' => 'nullable|exists:portales,id',
             'nombre' => 'required|string|max:160',
             'slug' => 'nullable|string|max:120|unique:empresas,slug,' . $id,
             'handle' => 'nullable|string|max:120|unique:empresas,handle,' . $id,
@@ -220,6 +223,7 @@ class EmpresasController extends Controller
         }
 
         $empresa->update([
+            'portal_id' => $data['portal_id'] ?? $empresa->portal_id,
             'nombre' => $data['nombre'],
             'slug' => $data['slug'] ?? $empresa->slug,
             'handle' => $handle,
