@@ -107,4 +107,23 @@ class PortalesController extends Controller
         $portal->delete();
         return redirect()->route('admin.portales.index')->with('ok', 'Portal eliminado');
     }
+
+    /**
+     * Switch active portal context for admin session
+     */
+    public function switchPortal(Request $request)
+    {
+        $portalId = $request->input('portal_id');
+        
+        if ($portalId) {
+            $portal = Portal::findOrFail($portalId);
+            session(['current_portal_id' => $portal->id]);
+            \App\Services\PortalContextService::setSessionPortal($portal->id);
+            return back()->with('ok', "Portal activo: {$portal->nombre}");
+        } else {
+            session()->forget('current_portal_id');
+            \App\Services\PortalContextService::setSessionPortal(null);
+            return back()->with('ok', 'Mostrando todos los portales');
+        }
+    }
 }
