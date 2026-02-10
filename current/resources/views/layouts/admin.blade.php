@@ -28,10 +28,20 @@
         $userEmpresas = collect([$empresa]);
     }
 
-    // Portal context for superadmin
+    // Portal context for superadmin (safe check if table exists)
     $currentPortalId = session('current_portal_id');
-    $currentPortal = $currentPortalId ? \App\Models\Portal::find($currentPortalId) : null;
-    $allPortales = $isSuperAdmin ? \App\Models\Portal::where('activo', true)->orderBy('nombre')->get() : collect();
+    $currentPortal = null;
+    $allPortales = collect();
+    
+    if ($isSuperAdmin) {
+        try {
+            $currentPortal = $currentPortalId ? \App\Models\Portal::find($currentPortalId) : null;
+            $allPortales = \App\Models\Portal::where('activo', true)->orderBy('nombre')->get();
+        } catch (\Exception $e) {
+            // Table doesn't exist yet - migrations pending
+            $allPortales = collect();
+        }
+    }
 @endphp
 <!doctype html>
 <html lang="es">
