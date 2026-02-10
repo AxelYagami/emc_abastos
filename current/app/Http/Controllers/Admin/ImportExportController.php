@@ -58,13 +58,13 @@ class ImportExportController extends Controller
 
     public function productosTemplate()
     {
-        $headers = ['sku', 'nombre', 'descripcion', 'precio', 'unidad', 'categoria_nombre', 'activo'];
+        $headers = ['sku', 'nombre', 'descripcion', 'precio', 'categoria_nombre', 'activo'];
 
         $csv = "\xEF\xBB\xBF"; // UTF-8 BOM for Excel
         $csv .= implode(',', $headers) . "\n";
-        $csv .= "SKU001,Producto Ejemplo,Descripcion del producto,99.99,kg,Frutas,1\n";
-        $csv .= "SKU002,Otro Producto,Otra descripcion,149.50,pza,Verduras,1\n";
-        $csv .= ",Producto Sin SKU,Solo nombre y precio,25.00,,Lacteos,1\n";
+        $csv .= "SKU001,Producto Ejemplo,Descripcion del producto,99.99,Frutas,1\n";
+        $csv .= "SKU002,Otro Producto,Otra descripcion,149.50,Verduras,1\n";
+        $csv .= ",Producto Sin SKU,Solo nombre y precio,25.00,Lacteos,1\n";
 
         return Response::make($csv, 200, [
             'Content-Type' => 'text/csv; charset=UTF-8',
