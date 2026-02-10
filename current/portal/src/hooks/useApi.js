@@ -2,12 +2,46 @@ import { useState, useEffect } from 'react'
 
 const API_BASE = import.meta.env.VITE_API_URL || '/api'
 
+// Get portal slug from URL param, subdomain, or env
+function getPortalSlug() {
+  // 1. Check URL parameter ?portal=slug
+  const params = new URLSearchParams(window.location.search)
+  if (params.get('portal')) {
+    return params.get('portal')
+  }
+  
+  // 2. Check subdomain (portal1.example.com -> portal1)
+  const hostname = window.location.hostname
+  const parts = hostname.split('.')
+  if (parts.length >= 3 && parts[0] !== 'www') {
+    return parts[0]
+  }
+  
+  // 3. Check env variable
+  if (import.meta.env.VITE_PORTAL_SLUG) {
+    return import.meta.env.VITE_PORTAL_SLUG
+  }
+  
+  return null
+}
+
+const PORTAL_SLUG = getPortalSlug()
+
+function buildUrl(endpoint) {
+  const url = `${API_BASE}${endpoint}`
+  if (PORTAL_SLUG) {
+    const separator = url.includes('?') ? '&' : '?'
+    return `${url}${separator}portal=${PORTAL_SLUG}`
+  }
+  return url
+}
+
 export function usePortalConfig() {
   const [config, setConfig] = useState(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetch(`${API_BASE}/public/portal-config`)
+    fetch(buildUrl('/public/portal-config'))
       .then(res => res.json())
       .then(data => {
         if (data.success) setConfig(data.data)
@@ -24,7 +58,7 @@ export function useStores() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetch(`${API_BASE}/public/stores`)
+    fetch(buildUrl('/public/stores'))
       .then(res => res.json())
       .then(data => {
         if (data.success) setStores(data.data)
@@ -41,7 +75,7 @@ export function usePromotions() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetch(`${API_BASE}/public/promotions`)
+    fetch(buildUrl('/public/promotions'))
       .then(res => res.json())
       .then(data => {
         if (data.success) setPromotions(data.data)
@@ -58,7 +92,7 @@ export function useFlyer() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetch(`${API_BASE}/public/flyer`)
+    fetch(buildUrl('/public/flyer'))
       .then(res => res.json())
       .then(data => {
         if (data.success) setFlyer(data.data)
@@ -77,7 +111,8 @@ export function useProducts(params = {}) {
 
   useEffect(() => {
     const queryString = new URLSearchParams(params).toString()
-    fetch(`${API_BASE}/public/products${queryString ? '?' + queryString : ''}`)
+    const baseUrl = `/public/products${queryString ? '?' + queryString : ''}`
+    fetch(buildUrl(baseUrl.startsWith('/') ? baseUrl : '/' + baseUrl))
       .then(res => res.json())
       .then(data => {
         if (data.success) {
