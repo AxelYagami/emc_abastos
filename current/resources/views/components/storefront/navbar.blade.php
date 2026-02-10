@@ -26,10 +26,12 @@
 
             <!-- Desktop Navigation -->
             <nav class="hidden md:flex items-center gap-1">
+                @if($portalUrl)
                 <a href="{{ $portalUrl }}"
                    class="px-4 py-2 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100 font-medium transition-all">
                     Portal
                 </a>
+                @endif
 
                 @auth
                     <a href="{{ route('admin.dashboard') }}"
