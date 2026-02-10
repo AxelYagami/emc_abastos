@@ -3,7 +3,31 @@
 @section('content')
 <div class="max-w-4xl">
 
-  @if($empresas)
+  @if($portales ?? false)
+  <div class="mb-6 bg-white rounded-xl shadow-sm border p-4">
+    <form method="GET" class="flex flex-wrap items-center gap-4">
+      <div class="flex items-center gap-2">
+        <label class="text-sm font-medium text-gray-700">Portal:</label>
+        <select name="portal_id" onchange="this.form.submit()" class="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-primary-500">
+          <option value="">-- Todos --</option>
+          @foreach($portales as $p)
+            <option value="{{ $p->id }}" {{ ($portalId ?? '') == $p->id ? 'selected' : '' }}>{{ $p->nombre }}</option>
+          @endforeach
+        </select>
+      </div>
+      @if($empresas)
+      <div class="flex items-center gap-2">
+        <label class="text-sm font-medium text-gray-700">Empresa:</label>
+        <select name="empresa_id" onchange="this.form.submit()" class="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-primary-500">
+          @foreach($empresas as $emp)
+            <option value="{{ $emp->id }}" {{ $emp->id == $empresaId ? 'selected' : '' }}>{{ $emp->nombre }}</option>
+          @endforeach
+        </select>
+      </div>
+      @endif
+    </form>
+  </div>
+  @elseif($empresas)
   <div class="mb-6 bg-white rounded-xl shadow-sm border p-4">
     <form method="GET" class="flex items-center gap-4">
       <label class="text-sm font-medium text-gray-700">Empresa destino:</label>
