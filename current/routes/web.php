@@ -42,6 +42,9 @@ Route::get('/portal', function () {
     return app(StoreController::class)->index(request());
 })->name('store.home');
 
+// Product detail page
+Route::get('/producto/{producto}', [StoreController::class, 'show'])->name('store.producto');
+
 // Dynamic portal routes - MUST be after all other specific routes
 // These are registered at the bottom of the file
 
