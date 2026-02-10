@@ -436,15 +436,22 @@ class PortalController extends Controller
      */
     public function promotions(Request $request)
     {
-        $perStore = (int) $request->get('per_store', PortalConfig::get('promos_per_store', 1));
+        $portal = $this->resolvePortal($request);
+        $perStore = (int) $request->get('per_store', $portal?->promos_per_store ?? PortalConfig::get('promos_per_store', 1));
 
         // Get active promotions grouped by store
-        $promotions = StorePromotion::active()
+        $query = StorePromotion::active()
             ->with(['empresa', 'producto'])
-            ->whereHas('empresa', fn($q) => $q->where('activa', true)->whereNotNull('handle'))
+            ->whereHas('empresa', function($q) use ($portal) {
+                $q->where('activa', true)->whereNotNull('handle');
+                if ($portal) {
+                    $q->where('portal_id', $portal->id);
+                }
+            })
             ->orderBy('empresa_id')
-            ->orderBy('sort_order')
-            ->get()
+            ->orderBy('sort_order');
+            
+        $promotions = $query->get()
             ->groupBy('empresa_id')
             ->map(fn($group) => $group->take($perStore))
             ->flatten()
