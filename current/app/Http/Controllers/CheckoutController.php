@@ -176,6 +176,12 @@ class CheckoutController extends Controller
         // If MercadoPago selected and configured, redirect to payment
         if ($request->input('metodo_pago') === 'mercadopago') {
             try {
+                // Check if we have a valid domain (MercadoPago doesn't accept IP addresses)
+                $host = $request->getHost();
+                if (filter_var($host, FILTER_VALIDATE_IP)) {
+                    throw new \Exception('MercadoPago requiere un dominio válido. No funciona con direcciones IP. Configura un dominio para habilitar pagos con MercadoPago.');
+                }
+
                 if (MercadoPagoService::isConfigured($empresaId)) {
                     $mpService = new MercadoPagoService($empresaId);
                     
@@ -206,11 +212,10 @@ class CheckoutController extends Controller
                 // Log error but continue to thanks page
                 \Log::error('MercadoPago error', [
                     'error' => $e->getMessage(),
-                    'trace' => $e->getTraceAsString(),
                     'empresa_id' => $empresaId,
                 ]);
                 // Show error to user in session
-                session()->flash('mp_error', 'Error al procesar pago: ' . $e->getMessage());
+                session()->flash('mp_error', $e->getMessage());
             }
         }
 
