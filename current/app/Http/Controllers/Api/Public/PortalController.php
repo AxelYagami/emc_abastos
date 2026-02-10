@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Public;
 
 use App\Http\Controllers\Controller;
+use App\Models\Portal;
 use App\Models\PortalConfig;
 use App\Models\Empresa;
 use App\Models\StorePromotion;
@@ -11,12 +12,99 @@ use Illuminate\Http\Request;
 class PortalController extends Controller
 {
     /**
+     * Resolve portal from request (by slug, id, or domain)
+     */
+    private function resolvePortal(Request $request): ?Portal
+    {
+        // Try by slug parameter
+        if ($request->has('portal')) {
+            return Portal::where('slug', $request->get('portal'))->where('activo', true)->first();
+        }
+        
+        // Try by portal_id parameter
+        if ($request->has('portal_id')) {
+            return Portal::where('id', $request->get('portal_id'))->where('activo', true)->first();
+        }
+        
+        // Try by domain (from Host header)
+        $host = $request->getHost();
+        $host = preg_replace('/:\d+$/', '', $host); // Remove port
+        $portal = Portal::where('dominio', $host)->where('activo', true)->first();
+        if ($portal) {
+            return $portal;
+        }
+        
+        // Try subdomain match
+        $parts = explode('.', $host);
+        if (count($parts) >= 2) {
+            $subdomain = $parts[0];
+            $portal = Portal::where('slug', $subdomain)->where('activo', true)->first();
+            if ($portal) {
+                return $portal;
+            }
+        }
+        
+        // Fallback: if only one portal exists, use it
+        $portals = Portal::where('activo', true)->get();
+        if ($portals->count() === 1) {
+            return $portals->first();
+        }
+        
+        return null;
+    }
+
+    /**
      * GET /api/public/portal-config
      */
-    public function config()
+    public function config(Request $request)
     {
+        $portal = $this->resolvePortal($request);
+        
+        if ($portal) {
+            // Return portal-specific config
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'portal_id' => $portal->id,
+                    'portal_slug' => $portal->slug,
+                    'portal_name' => $portal->nombre,
+                    'portal_tagline' => $portal->tagline ?? '',
+                    'portal_description' => $portal->descripcion ?? '',
+                    'active_template' => $portal->active_template ?? 'default',
+                    'hero' => [
+                        'title' => $portal->hero_title ?? '',
+                        'subtitle' => $portal->hero_subtitle ?? '',
+                        'cta_text' => $portal->hero_cta_text ?? 'Explorar',
+                        'image' => null,
+                    ],
+                    'developer' => [
+                        'name' => $portal->developer_name ?? 'iaDoS.mx',
+                        'url' => $portal->developer_url ?? 'https://iados.mx',
+                        'email' => $portal->developer_email ?? 'contacto@iados.mx',
+                        'whatsapp' => $portal->developer_whatsapp ?? '8318989580',
+                    ],
+                    'theme' => [
+                        'primary_color' => $portal->primary_color ?? '#16a34a',
+                        'secondary_color' => $portal->secondary_color ?? '#6b7280',
+                    ],
+                    'settings' => [
+                        'show_prices' => (bool)($portal->show_prices_in_portal ?? true),
+                        'promos_per_store' => (int)($portal->promos_per_store ?? 1),
+                        'ai_assistant_enabled' => (bool)($portal->ai_assistant_enabled ?? true),
+                        'ai_assistant_title' => $portal->ai_assistant_title ?? 'Asistente IA',
+                        'ai_assistant_welcome' => $portal->ai_assistant_welcome ?? 'Hola! Puedo ayudarte.',
+                    ],
+                    'flyer' => [
+                        'enabled' => (bool)($portal->flyer_enabled ?? true),
+                        'title' => $portal->flyer_title ?? 'Productos destacados',
+                        'subtitle' => $portal->flyer_subtitle ?? '',
+                    ],
+                ],
+            ]);
+        }
+        
+        // Fallback to old PortalConfig (legacy)
         $config = PortalConfig::getAll();
-
         return response()->json([
             'success' => true,
             'data' => [
@@ -43,10 +131,9 @@ class PortalController extends Controller
                 'settings' => [
                     'show_prices' => (bool)($config['show_prices_in_portal'] ?? true),
                     'promos_per_store' => (int)($config['promos_per_store'] ?? 1),
-                    'fallback_domain' => $config['fallback_domain'] ?? 'tiendas.emc.mx',
                     'ai_assistant_enabled' => filter_var($config['ai_assistant_enabled'] ?? true, FILTER_VALIDATE_BOOLEAN),
                     'ai_assistant_title' => $config['ai_assistant_title'] ?? 'Asistente IA',
-                    'ai_assistant_welcome' => $config['ai_assistant_welcome'] ?? 'Hola! Puedo ayudarte a encontrar productos y tiendas.',
+                    'ai_assistant_welcome' => $config['ai_assistant_welcome'] ?? 'Hola!',
                 ],
             ],
         ]);
@@ -57,11 +144,18 @@ class PortalController extends Controller
      */
     public function stores(Request $request)
     {
+        $portal = $this->resolvePortal($request);
+        
         $query = Empresa::where('activa', true)
             ->whereNotNull('handle')
             ->orderBy('is_featured', 'desc')
             ->orderBy('sort_order')
             ->orderBy('nombre');
+
+        // Filter by portal if resolved
+        if ($portal) {
+            $query->where('portal_id', $portal->id);
+        }
 
         if ($request->has('featured')) {
             $query->where('is_featured', true);
@@ -72,6 +166,10 @@ class PortalController extends Controller
         return response()->json([
             'success' => true,
             'data' => $stores,
+            'meta' => [
+                'portal_id' => $portal?->id,
+                'portal_name' => $portal?->nombre,
+            ],
         ]);
     }
 
