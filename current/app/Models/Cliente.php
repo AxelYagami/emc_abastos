@@ -3,9 +3,12 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Traits\BelongsToPortal;
 
 class Cliente extends Model
 {
+    use BelongsToPortal;
+
     protected $table = 'clientes';
     protected $guarded = [];
 

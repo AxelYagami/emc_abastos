@@ -4,9 +4,12 @@ namespace App\Models;
 
 use App\Services\ProductImageService;
 use Illuminate\Database\Eloquent\Model;
+use App\Traits\BelongsToPortal;
 
 class Producto extends Model
 {
+    use BelongsToPortal;
+
     protected $table = 'productos';
     protected $guarded = [];
     protected $casts = [

@@ -3,9 +3,12 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Traits\BelongsToPortal;
 
 class Empresa extends Model
 {
+    use BelongsToPortal;
+
     protected $table = 'empresas';
 
     protected $fillable = [
