@@ -361,10 +361,28 @@ class PortalController extends Controller
      * GET /api/public/flyer
      * Products for the flyer/banner section
      */
-    public function flyer()
+    public function flyer(Request $request)
     {
-        $config = PortalConfig::getAll();
-        $flyerEnabled = filter_var($config['flyer_enabled'] ?? true, FILTER_VALIDATE_BOOLEAN);
+        $portal = $this->resolvePortal($request);
+        
+        // Get flyer config from portal or legacy config
+        $flyerEnabled = true;
+        $flyerCount = 6;
+        $flyerTitle = 'Productos destacados';
+        $flyerSubtitle = '';
+        
+        if ($portal) {
+            $flyerEnabled = (bool)($portal->flyer_enabled ?? true);
+            $flyerCount = (int)($portal->flyer_max_per_store ?? 5) * 2;
+            $flyerTitle = $portal->flyer_title ?? 'Productos destacados';
+            $flyerSubtitle = $portal->flyer_subtitle ?? '';
+        } else {
+            $config = PortalConfig::getAll();
+            $flyerEnabled = filter_var($config['flyer_enabled'] ?? true, FILTER_VALIDATE_BOOLEAN);
+            $flyerCount = (int) ($config['flyer_product_count'] ?? 6);
+            $flyerTitle = $config['flyer_title'] ?? 'Productos destacados';
+            $flyerSubtitle = $config['flyer_subtitle'] ?? '';
+        }
 
         if (!$flyerEnabled) {
             return response()->json([
@@ -376,26 +394,19 @@ class PortalController extends Controller
             ]);
         }
 
-        $flyerProductIds = $config['flyer_product_ids'] ?? null;
-        $flyerCount = (int) ($config['flyer_product_count'] ?? 6);
-
-        if ($flyerProductIds) {
-            // Use configured products
-            $ids = is_array($flyerProductIds) ? $flyerProductIds : json_decode($flyerProductIds, true);
-            $products = \App\Models\Producto::whereIn('id', $ids ?: [])
-                ->where('activo', true)
-                ->whereHas('empresa', fn($q) => $q->where('activa', true))
-                ->with(['empresa'])
-                ->get();
-        } else {
-            // Get random products from featured stores
-            $products = \App\Models\Producto::where('activo', true)
-                ->whereHas('empresa', fn($q) => $q->where('activa', true)->whereNotNull('handle'))
-                ->with(['empresa'])
-                ->inRandomOrder()
-                ->limit($flyerCount)
-                ->get();
-        }
+        // Get random products from portal stores
+        $query = \App\Models\Producto::where('activo', true)
+            ->whereHas('empresa', function($q) use ($portal) {
+                $q->where('activa', true)->whereNotNull('handle');
+                if ($portal) {
+                    $q->where('portal_id', $portal->id);
+                }
+            })
+            ->with(['empresa'])
+            ->inRandomOrder()
+            ->limit($flyerCount);
+            
+        $products = $query->get();
 
         $formattedProducts = $products->map(fn($p) => [
             'id' => $p->id,
@@ -413,8 +424,8 @@ class PortalController extends Controller
             'success' => true,
             'data' => [
                 'enabled' => true,
-                'title' => $config['flyer_title'] ?? 'Productos destacados',
-                'subtitle' => $config['flyer_subtitle'] ?? 'Del mercado de abastos a tu negocio',
+                'title' => $flyerTitle,
+                'subtitle' => $flyerSubtitle,
                 'products' => $formattedProducts,
             ],
         ]);
