@@ -309,9 +309,11 @@ class ImportExportController extends Controller
 
     public function categoriasIndex(Request $request)
     {
-        $empresas = $this->getEmpresasForUser();
+        $portales = $this->getPortalesForUser();
+        $portalId = $request->filled('portal_id') ? (int)$request->input('portal_id') : null;
+        $empresas = $this->getEmpresasForUser($portalId);
         $empresaId = $this->resolveEmpresaId($request);
-        return view('admin.import-export.categorias', compact('empresas', 'empresaId'));
+        return view('admin.import-export.categorias', compact('portales', 'portalId', 'empresas', 'empresaId'));
     }
 
     public function categoriasTemplate()
