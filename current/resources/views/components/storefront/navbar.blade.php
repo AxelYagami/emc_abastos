@@ -3,11 +3,11 @@
 @php
     // Get current store's portal for navigation
     $currentStore = $currentStore ?? null;
-    $portalUrl = url('/portal'); // Default
+    $portalUrl = null; // No default - must have portal
     
     if ($currentStore && $currentStore->portal) {
-        // Use portal slug for URL
-        $portalUrl = url('/portal?portal=' . $currentStore->portal->slug);
+        // URL: /{portal_slug}
+        $portalUrl = url('/' . $currentStore->portal->slug);
     }
 @endphp
 
