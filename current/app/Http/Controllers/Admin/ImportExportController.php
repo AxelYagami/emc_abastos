@@ -656,9 +656,11 @@ class ImportExportController extends Controller
 
     public function inventarioIndex(Request $request)
     {
-        $empresas = $this->getEmpresasForUser();
+        $portales = $this->getPortalesForUser();
+        $portalId = $request->filled('portal_id') ? (int)$request->input('portal_id') : null;
+        $empresas = $this->getEmpresasForUser($portalId);
         $empresaId = $this->resolveEmpresaId($request);
-        return view('admin.import-export.inventario', compact('empresas', 'empresaId'));
+        return view('admin.import-export.inventario', compact('portales', 'portalId', 'empresas', 'empresaId'));
     }
 
     public function inventarioTemplate()
