@@ -34,7 +34,8 @@ class ProductImageService
 
         // 2. Auto image (cached)
         if ($this->config['enabled'] && $product->use_auto_image) {
-            $autoImage = $this->getAutoImage($product->nombre, $product->id);
+            $categoria = $product->categoria?->nombre ?? 'producto';
+            $autoImage = $this->getAutoImage($product->nombre, $categoria, $product->id);
             if ($autoImage) {
                 return $autoImage;
             }
@@ -50,29 +51,30 @@ class ProductImageService
     }
 
     /**
-     * Get auto-generated image based on product name
+     * Get auto-generated image based on product name and category
      */
-    public function getAutoImage(string $productName, int $productId): ?string
+    public function getAutoImage(string $productName, string $category = 'producto', int $productId = 0): ?string
     {
         $cacheKey = "product_image_{$productId}";
 
-        return Cache::remember($cacheKey, now()->addHours($this->config['cache_hours']), function () use ($productName, $productId) {
-            return $this->fetchImageFromSource($productName, $productId);
+        return Cache::remember($cacheKey, now()->addHours($this->config['cache_hours']), function () use ($productName, $category, $productId) {
+            return $this->fetchImageFromSource($productName, $category, $productId);
         });
     }
 
     /**
      * Fetch image from configured source
      */
-    protected function fetchImageFromSource(string $productName, int $productId): ?string
+    protected function fetchImageFromSource(string $productName, string $category, int $productId): ?string
     {
         $searchTerm = $this->normalizeSearchTerm($productName);
+        $categoryTerm = $this->normalizeSearchTerm($category);
 
         switch ($this->config['source']) {
             case 'unsplash':
-                return $this->fetchFromUnsplash($searchTerm, $productId);
+                return $this->fetchFromUnsplash($searchTerm, $categoryTerm, $productId);
             case 'pexels':
-                return $this->fetchFromPexels($searchTerm);
+                return $this->fetchFromPexels($searchTerm, $categoryTerm);
             default:
                 return $this->getPlaceholderImage($searchTerm, $productId);
         }
@@ -81,18 +83,19 @@ class ProductImageService
     /**
      * Use Unsplash Source (no API key needed)
      */
-    protected function fetchFromUnsplash(string $searchTerm, int $productId): string
+    protected function fetchFromUnsplash(string $searchTerm, string $category, int $productId): string
     {
         // Use Unsplash Source for reliable, free images
-        // The seed ensures same product always gets same image
-        $seed = md5($searchTerm . $productId);
-        return "https://source.unsplash.com/400x300/?{$searchTerm},food&sig={$seed}";
+        // Combine product name + category for better results
+        $query = "{$searchTerm},{$category},food";
+        $seed = md5($searchTerm . $category . $productId);
+        return "https://source.unsplash.com/400x300/?{$query}&sig={$seed}";
     }
 
     /**
      * Fetch from Pexels API
      */
-    protected function fetchFromPexels(string $searchTerm): ?string
+    protected function fetchFromPexels(string $searchTerm, string $category): ?string
     {
         $apiKey = config('services.pexels.key');
         if (!$apiKey) {
