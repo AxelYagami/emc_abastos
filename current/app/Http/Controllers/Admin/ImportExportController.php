@@ -281,7 +281,7 @@ class ImportExportController extends Controller
             ->orderBy('nombre')
             ->get();
 
-        $headers = ['sku', 'nombre', 'descripcion', 'precio', 'unidad', 'categoria_nombre', 'activo'];
+        $headers = ['sku', 'nombre', 'descripcion', 'precio', 'categoria_nombre', 'activo'];
         $csv = "\xEF\xBB\xBF" . implode(',', $headers) . "\n";
 
         foreach ($productos as $p) {
