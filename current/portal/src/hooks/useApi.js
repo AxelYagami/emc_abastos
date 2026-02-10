@@ -2,24 +2,20 @@ import { useState, useEffect } from 'react'
 
 const API_BASE = import.meta.env.VITE_API_URL || '/api'
 
-// Get portal slug from URL param, subdomain, or env
+// Get portal slug from URL path: /portal-slug/tiendas -> portal-slug
 function getPortalSlug() {
-  // 1. Check URL parameter ?portal=slug
-  const params = new URLSearchParams(window.location.search)
-  if (params.get('portal')) {
-    return params.get('portal')
-  }
+  const path = window.location.pathname
+  const parts = path.split('/').filter(Boolean)
   
-  // 2. Check subdomain (portal1.example.com -> portal1)
-  const hostname = window.location.hostname
-  const parts = hostname.split('.')
-  if (parts.length >= 3 && parts[0] !== 'www') {
+  // First segment is the portal slug (e.g., /portal2/tiendas -> portal2)
+  if (parts.length > 0 && parts[0] !== 'portal') {
     return parts[0]
   }
   
-  // 3. Check env variable
-  if (import.meta.env.VITE_PORTAL_SLUG) {
-    return import.meta.env.VITE_PORTAL_SLUG
+  // Fallback: check query param
+  const params = new URLSearchParams(window.location.search)
+  if (params.get('portal')) {
+    return params.get('portal')
   }
   
   return null
@@ -50,7 +46,7 @@ export function usePortalConfig() {
       .finally(() => setLoading(false))
   }, [])
 
-  return { config, loading }
+  return { config, loading, portalSlug: PORTAL_SLUG }
 }
 
 export function useStores() {
@@ -111,8 +107,8 @@ export function useProducts(params = {}) {
 
   useEffect(() => {
     const queryString = new URLSearchParams(params).toString()
-    const baseUrl = `/public/products${queryString ? '?' + queryString : ''}`
-    fetch(buildUrl(baseUrl.startsWith('/') ? baseUrl : '/' + baseUrl))
+    const baseEndpoint = `/public/products${queryString ? '?' + queryString : ''}`
+    fetch(buildUrl(baseEndpoint))
       .then(res => res.json())
       .then(data => {
         if (data.success) {
@@ -126,3 +122,6 @@ export function useProducts(params = {}) {
 
   return { products, loading, meta }
 }
+
+// Export portal slug for use in components
+export const currentPortalSlug = PORTAL_SLUG
