@@ -33,9 +33,17 @@ Route::get('/', function () {
     return redirect('/' . ltrim($path, '/'));
 })->name('home.redirect');
 
-// Storefront (main domain)
-Route::get('/portal', [StoreController::class, 'index'])->name('store.home');
-Route::get('/producto/{producto}', [StoreController::class, 'show'])->name('store.producto');
+// Legacy portal route (redirect to first active portal)
+Route::get('/portal', function () {
+    $portal = \App\Models\Portal::where('activo', true)->first();
+    if ($portal) {
+        return redirect('/' . $portal->slug);
+    }
+    return app(StoreController::class)->index(request());
+})->name('store.home');
+
+// Dynamic portal routes - MUST be after all other specific routes
+// These are registered at the bottom of the file
 
 // Cart
 Route::get('/carrito', [CartController::class, 'index'])->name('cart.index');
