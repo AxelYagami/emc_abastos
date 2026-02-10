@@ -65,35 +65,45 @@
         <!-- Template -->
         <div class="bg-white rounded-lg shadow p-6">
             <h2 class="text-lg font-semibold text-gray-800 mb-4">Template del Portal</h2>
-            <div class="grid sm:grid-cols-2 gap-4">
+            <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 <label class="relative cursor-pointer">
-                    <input type="radio" name="active_template" value="default" checked class="peer sr-only">
+                    <input type="radio" name="active_template" value="classic" checked class="peer sr-only">
                     <div class="border-2 rounded-xl p-4 transition-all peer-checked:border-green-500 peer-checked:bg-green-50 hover:border-gray-300">
-                        <div class="flex items-center gap-3 mb-2">
-                            <div class="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center">
-                                <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z"/></svg>
-                            </div>
-                            <div>
-                                <span class="font-semibold text-gray-800">Default</span>
-                                <span class="ml-2 text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">Clasico</span>
-                            </div>
+                        <div class="w-full h-16 bg-gradient-to-br from-green-500 to-green-600 rounded-lg mb-3 flex items-end p-2">
+                            <div class="flex gap-1"><div class="w-3 h-3 bg-white/80 rounded"></div><div class="w-3 h-3 bg-white/60 rounded"></div><div class="w-3 h-3 bg-white/40 rounded"></div></div>
                         </div>
-                        <p class="text-sm text-gray-500">Hero con gradiente, secciones verticales.</p>
+                        <span class="font-semibold text-gray-800 block">Classic</span>
+                        <p class="text-xs text-gray-500">Hero + Grid tradicional</p>
                     </div>
                 </label>
                 <label class="relative cursor-pointer">
-                    <input type="radio" name="active_template" value="market_v2" class="peer sr-only">
-                    <div class="border-2 rounded-xl p-4 transition-all peer-checked:border-indigo-500 peer-checked:bg-indigo-50 hover:border-gray-300">
-                        <div class="flex items-center gap-3 mb-2">
-                            <div class="w-10 h-10 rounded-lg bg-indigo-100 flex items-center justify-center">
-                                <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
-                            </div>
-                            <div>
-                                <span class="font-semibold text-gray-800">Market v2</span>
-                                <span class="ml-2 text-xs bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-full">Premium</span>
-                            </div>
+                    <input type="radio" name="active_template" value="modern" class="peer sr-only">
+                    <div class="border-2 rounded-xl p-4 transition-all peer-checked:border-emerald-500 peer-checked:bg-emerald-50 hover:border-gray-300">
+                        <div class="w-full h-16 bg-gradient-to-br from-gray-800 to-gray-900 rounded-lg mb-3 flex items-end p-2">
+                            <div class="flex gap-1"><div class="w-3 h-3 bg-emerald-400 rounded"></div><div class="w-3 h-3 bg-emerald-300 rounded"></div><div class="w-3 h-3 bg-emerald-200 rounded"></div></div>
                         </div>
-                        <p class="text-sm text-gray-500">Diseño tipo marketplace moderno.</p>
+                        <span class="font-semibold text-gray-800 block">Modern</span>
+                        <p class="text-xs text-gray-500">Sidebar + Dark hero</p>
+                    </div>
+                </label>
+                <label class="relative cursor-pointer">
+                    <input type="radio" name="active_template" value="minimal" class="peer sr-only">
+                    <div class="border-2 rounded-xl p-4 transition-all peer-checked:border-gray-400 peer-checked:bg-gray-50 hover:border-gray-300">
+                        <div class="w-full h-16 bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg mb-3 flex items-center justify-center">
+                            <div class="flex gap-1"><div class="w-2 h-6 bg-gray-300 rounded"></div><div class="w-2 h-6 bg-gray-400 rounded"></div><div class="w-2 h-6 bg-gray-300 rounded"></div></div>
+                        </div>
+                        <span class="font-semibold text-gray-800 block">Minimal</span>
+                        <p class="text-xs text-gray-500">Ultra limpio, elegante</p>
+                    </div>
+                </label>
+                <label class="relative cursor-pointer">
+                    <input type="radio" name="active_template" value="bold" class="peer sr-only">
+                    <div class="border-2 rounded-xl p-4 transition-all peer-checked:border-orange-500 peer-checked:bg-orange-50 hover:border-gray-300">
+                        <div class="w-full h-16 bg-gradient-to-br from-orange-400 to-rose-500 rounded-lg mb-3 flex items-end p-2">
+                            <div class="flex gap-1"><div class="w-3 h-3 bg-white/80 rounded-full"></div><div class="w-3 h-3 bg-white/60 rounded-full"></div><div class="w-3 h-3 bg-white/40 rounded-full"></div></div>
+                        </div>
+                        <span class="font-semibold text-gray-800 block">Bold</span>
+                        <p class="text-xs text-gray-500">Vibrante, app mobile</p>
                     </div>
                 </label>
             </div>
