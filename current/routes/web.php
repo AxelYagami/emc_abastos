@@ -231,3 +231,27 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'empresa', 'role:adm
     Route::post('import-export/inventario/import', [\App\Http\Controllers\Admin\ImportExportController::class, 'inventarioImport'])->name('import-export.inventario.import');
     Route::get('import-export/inventario/export', [\App\Http\Controllers\Admin\ImportExportController::class, 'inventarioExport'])->name('import-export.inventario.export');
 });
+
+// =============================================================================
+// DYNAMIC PORTAL ROUTES - Must be LAST (catch-all for portal slugs)
+// =============================================================================
+Route::get('/{portal_slug}', function ($portal_slug) {
+    $portal = \App\Models\Portal::where('slug', $portal_slug)->where('activo', true)->first();
+    if (!$portal) {
+        abort(404, 'Portal no encontrado');
+    }
+    // Serve React app with portal context
+    return response()->file(public_path('portal/index.html'));
+})->where('portal_slug', '^(?!api|admin|t|login|logout|register|carrito|checkout|pedido|gracias|storage|ops).*$')
+  ->name('portal.index');
+
+Route::get('/{portal_slug}/{any}', function ($portal_slug, $any) {
+    $portal = \App\Models\Portal::where('slug', $portal_slug)->where('activo', true)->first();
+    if (!$portal) {
+        abort(404, 'Portal no encontrado');
+    }
+    // Serve React app for all sub-routes
+    return response()->file(public_path('portal/index.html'));
+})->where('portal_slug', '^(?!api|admin|t|login|logout|register|carrito|checkout|pedido|gracias|storage|ops).*$')
+  ->where('any', '.*')
+  ->name('portal.any');
