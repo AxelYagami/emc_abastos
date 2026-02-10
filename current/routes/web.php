@@ -127,12 +127,15 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'empresa', 'role:adm
 
     // Superadmin only routes
     Route::middleware('role:superadmin')->group(function () {
+        // Portales CRUD (multi-portal)
+        Route::resource('portales', \App\Http\Controllers\Admin\PortalesController::class);
+
         // Portal Config
         Route::get('portal', [PortalConfigController::class, 'index'])->name('portal.config');
         Route::post('portal', [PortalConfigController::class, 'update'])->name('portal.config.update');
 
         // Empresas CRUD
-        Route::resource('empresas', EmpresasController::class)->except(['show']);
+        Route::resource('empresas', EmpresasController::class);
 
         // Store Domains
         Route::get('empresas/{empresa}/domains', [StoreDomainsController::class, 'index'])->name('empresas.domains');
