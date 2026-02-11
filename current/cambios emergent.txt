@@ -1,0 +1,45 @@
+## Proyecto: EMC Abastos - Sistema Multi-Portal de Marketplace
+
+### Resumen de cambios realizados:
+
+**1. Sistema Multi-Portal:**
+- Modelo Portal con CRUD completo en admin/portales
+- 6 templates para portales: Default, Market v2, Classic, Modern, Minimal, Bold
+- Templates React en /portal/src/templates/{classic,modern,minimal,bold}/
+- Empresas tienen campo `portal_id` para asignar a un portal
+- URLs dinámicas: /{portal_slug}/tiendas (ej: /portal2/tiendas, /portal3/tiendas)
+- API pública filtra por portal: /api/public/stores?portal=slug
+
+**2. Clientes a nivel Portal:**
+- Tabla clientes tiene columna `portal_id`
+- ClientesController filtra por portal_id (no empresa_id)
+- Auto-asignación de portal_id al crear cliente desde tienda
+- Migración: database/migrations/2026_02_10_000002_add_portal_id_to_clientes.php
+
+**3. Importación/Exportación:**
+- Selector de Portal + Empresa en todas las secciones
+- Plantilla productos corregida (sin columna 'unidad')
+- ImportExportController actualizado con getPortalesForUser()
+
+**4. Validaciones:**
+- Portal: nombre único global
+- Empresa: nombre único por portal (puede repetirse en diferentes portales)
+
+**5. Imágenes automáticas:**
+- ProductImageService usa Picsum para placeholders
+- Imágenes basadas en nombre + categoría del producto
+
+**6. Archivos clave modificados:**
+- routes/web.php (rutas dinámicas de portal)
+- app/Http/Controllers/Admin/PortalesController.php
+- app/Http/Controllers/Admin/EmpresasController.php
+- app/Http/Controllers/Admin/ClientesController.php
+- app/Http/Controllers/Admin/ImportExportController.php
+- app/Http/Controllers/Api/Public/PortalController.php
+- app/Models/Cliente.php (relación portal)
+- app/Services/ProductImageService.php
+- portal/src/hooks/useApi.js (lee portal de URL)
+- portal/src/main.jsx (basename dinámico)
+- resources/views/admin/portales/*.blade.php
+
+

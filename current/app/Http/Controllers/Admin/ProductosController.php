@@ -59,6 +59,7 @@ class ProductosController extends Controller
         $data = $request->validate([
             'nombre' => ['required','string','max:160'],
             'sku' => ['nullable','string','max:80'],
+            'unidad' => ['nullable','string','max:50'],
             'descripcion' => ['nullable','string'],
             'precio' => ['required','numeric','min:0'],
             'stock' => ['nullable','integer','min:0'],
@@ -80,6 +81,7 @@ class ProductosController extends Controller
         $p->empresa_id = $empresaId;
         $p->nombre = $data['nombre'];
         $p->sku = $data['sku'] ?? null;
+        $p->unidad = $data['unidad'] ?? null;
         $p->descripcion = $data['descripcion'] ?? null;
         $p->precio = $data['precio'];
         $p->activo = (bool)$data['activo'];
@@ -110,6 +112,7 @@ class ProductosController extends Controller
         $data = $request->validate([
             'nombre' => ['required','string','max:160'],
             'sku' => ['nullable','string','max:80'],
+            'unidad' => ['nullable','string','max:50'],
             'descripcion' => ['nullable','string'],
             'precio' => ['required','numeric','min:0'],
             'categoria_id' => ['nullable','integer', 'exists:categorias,id'],
@@ -129,6 +132,7 @@ class ProductosController extends Controller
 
         $producto->nombre = $data['nombre'];
         $producto->sku = $data['sku'] ?? null;
+        $producto->unidad = $data['unidad'] ?? null;
         $producto->descripcion = $data['descripcion'] ?? null;
         $producto->precio = $data['precio'];
         $producto->activo = (bool)$data['activo'];
@@ -154,17 +158,25 @@ class ProductosController extends Controller
     {
         // Priority: uploaded file > URL > existing
         if ($request->hasFile('imagen')) {
+            // Delete old uploaded image if exists
+            if ($producto->imagen_path) {
+                $oldPath = str_replace('/storage/', '', $producto->imagen_path);
+                \Storage::disk('public')->delete($oldPath);
+            }
+
             $imagePath = $this->imageService->uploadImage(
                 $request->file('imagen'),
                 $empresaId,
                 $producto->id
             );
-            $producto->imagen_url = $imagePath;
+            $producto->imagen_path = $imagePath;
+            $producto->imagen_url = null; // Clear URL if file is uploaded
             $producto->image_source = 'manual';
             $producto->use_auto_image = false;
             $producto->save();
         } elseif ($request->filled('imagen_url') && $request->input('image_source') === 'manual') {
             $producto->imagen_url = $request->input('imagen_url');
+            $producto->imagen_path = null; // Clear path if URL is provided
             $producto->image_source = 'manual';
             $producto->use_auto_image = false;
             $producto->save();

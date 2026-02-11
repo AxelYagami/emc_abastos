@@ -23,58 +23,65 @@ class ProductImageService
 
     /**
      * Get image URL for a product
-     * Priority: manual > auto > default
+     * Priority: uploaded > manual > auto > default
      */
     public function getImageUrl($product): string
     {
-        // 1. Manual image
+        // 1. Uploaded image (imagen_path)
+        if (!empty($product->imagen_path)) {
+            return $this->ensureFullUrl($product->imagen_path);
+        }
+
+        // 2. Manual image (imagen_url)
         if (!empty($product->imagen_url) && $product->image_source === 'manual') {
             return $this->ensureFullUrl($product->imagen_url);
         }
 
-        // 2. Auto image (cached)
+        // 3. Auto image (cached)
         if ($this->config['enabled'] && $product->use_auto_image) {
             $categoria = $product->categoria?->nombre ?? 'producto';
-            $autoImage = $this->getAutoImage($product->nombre, $categoria, $product->id);
+            $unidad = $product->unidad ?? '';
+            $autoImage = $this->getAutoImage($product->nombre, $categoria, $unidad, $product->id);
             if ($autoImage) {
                 return $autoImage;
             }
         }
 
-        // 3. Product has any imagen_url
+        // 4. Product has any imagen_url
         if (!empty($product->imagen_url)) {
             return $this->ensureFullUrl($product->imagen_url);
         }
 
-        // 4. Default
+        // 5. Default
         return $this->getDefaultImage();
     }
 
     /**
-     * Get auto-generated image based on product name and category
+     * Get auto-generated image based on product name, category, and unit
      */
-    public function getAutoImage(string $productName, string $category = 'producto', int $productId = 0): ?string
+    public function getAutoImage(string $productName, string $category = 'producto', string $unidad = '', int $productId = 0): ?string
     {
         $cacheKey = "product_image_{$productId}";
 
-        return Cache::remember($cacheKey, now()->addHours($this->config['cache_hours']), function () use ($productName, $category, $productId) {
-            return $this->fetchImageFromSource($productName, $category, $productId);
+        return Cache::remember($cacheKey, now()->addHours($this->config['cache_hours']), function () use ($productName, $category, $unidad, $productId) {
+            return $this->fetchImageFromSource($productName, $category, $unidad, $productId);
         });
     }
 
     /**
      * Fetch image from configured source
      */
-    protected function fetchImageFromSource(string $productName, string $category, int $productId): ?string
+    protected function fetchImageFromSource(string $productName, string $category, string $unidad, int $productId): ?string
     {
         $searchTerm = $this->normalizeSearchTerm($productName);
         $categoryTerm = $this->normalizeSearchTerm($category);
+        $unidadTerm = $this->normalizeSearchTerm($unidad);
 
         switch ($this->config['source']) {
             case 'unsplash':
-                return $this->fetchFromUnsplash($searchTerm, $categoryTerm, $productId);
+                return $this->fetchFromUnsplash($searchTerm, $categoryTerm, $unidadTerm, $productId);
             case 'pexels':
-                return $this->fetchFromPexels($searchTerm, $categoryTerm);
+                return $this->fetchFromPexels($searchTerm, $categoryTerm, $unidadTerm);
             default:
                 return $this->getPlaceholderImage($searchTerm, $productId);
         }
@@ -83,17 +90,18 @@ class ProductImageService
     /**
      * Use Unsplash Source (no API key needed)
      */
-    protected function fetchFromUnsplash(string $searchTerm, string $category, int $productId): string
+    protected function fetchFromUnsplash(string $searchTerm, string $category, string $unidad, int $productId): string
     {
         // Use Picsum for reliable placeholder images (Unsplash Source deprecated)
-        $seed = abs(crc32($searchTerm . $category . $productId));
+        // Include unidad in seed for more variety
+        $seed = abs(crc32($searchTerm . $category . $unidad . $productId));
         return "https://picsum.photos/seed/{$seed}/400/300";
     }
 
     /**
      * Fetch from Pexels API
      */
-    protected function fetchFromPexels(string $searchTerm, string $category): ?string
+    protected function fetchFromPexels(string $searchTerm, string $category, string $unidad): ?string
     {
         $apiKey = config('services.pexels.key');
         if (!$apiKey) {
@@ -101,10 +109,16 @@ class ProductImageService
         }
 
         try {
+            // Build search query including unit if available
+            $query = $searchTerm . ' ' . $category;
+            if ($unidad) {
+                $query .= ' ' . $unidad;
+            }
+
             $response = Http::withHeaders([
                 'Authorization' => $apiKey,
             ])->get('https://api.pexels.com/v1/search', [
-                'query' => $searchTerm . ' food',
+                'query' => $query . ' food',
                 'per_page' => 1,
             ]);
 

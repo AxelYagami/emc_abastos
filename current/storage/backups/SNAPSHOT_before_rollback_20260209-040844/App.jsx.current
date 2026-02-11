@@ -1,0 +1,172 @@
+/**
+ * EMC Abastos - Portal App
+ * 
+ * Template Selection System:
+ * - active_template from PortalConfig selects which template to render
+ * - Currently GLOBAL (portal-level)
+ * - PREPARED for multi-tenant: can extend to support corporativo_id or empresa_id level
+ * 
+ * Templates available:
+ * - 'default': Classic green gradient, vertical sections
+ * - 'market_v2': Modern marketplace, glassmorphism, magazine layout
+ */
+
+import ModernHome from "./templates/modern/ModernHome";
+import MinimalHome from "./templates/minimal/MinimalHome";
+import BoldHome from "./templates/bold/BoldHome";
+
+import { useState, lazy, Suspense } from 'react'
+import { Routes, Route } from 'react-router-dom'
+import { usePortalConfig } from './hooks/useApi'
+
+// Lazy load templates for better performance
+const DefaultHeader = lazy(() => import('./templates/default/DefaultHeader'))
+const DefaultHome = lazy(() => import('./templates/default/DefaultHome'))
+const DefaultFooter = lazy(() => import('./templates/default/DefaultFooter'))
+
+const MarketHeader = lazy(() => import('./templates/market_v2/MarketHeader'))
+const MarketHome = lazy(() => import('./templates/market_v2/MarketHome'))
+const MarketFooter = lazy(() => import('./templates/market_v2/MarketFooter'))
+
+// Shared pages (same across templates)
+import Stores from './pages/Stores'
+import Promos from './pages/Promos'
+import AIAssistant from './components/AIAssistant'
+
+// Template registry - easy to extend for new templates
+const TEMPLATES = {
+  default: {
+    Header: DefaultHeader,
+    Home: DefaultHome,
+    Footer: DefaultFooter,
+  },
+  market_v2: {
+    Header: MarketHeader,
+    Home: MarketHome,
+    Footer: MarketFooter,
+  },
+}
+
+// Loading spinner component
+function LoadingScreen() {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="text-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary-600 border-t-transparent mx-auto"></div>
+        <p className="mt-4 text-gray-500 text-sm">Cargando...</p>
+      </div>
+    </div>
+  )
+}
+
+export default function App() {
+  const { config, loading } = usePortalConfig()
+  const [assistantOpen, setAssistantOpen] = useState(false)
+
+  if (loading) {
+    return <LoadingScreen />
+  }
+
+  // Get active template from config, fallback to 'default'
+  const activeTemplate = config?.active_template || 'default'
+  
+  // Get template components, fallback to default if template not found
+  const template = TEMPLATES[activeTemplate] || TEMPLATES.default
+  const { Header, Home, Footer } = template
+
+  return (
+    <div className="min-h-screen flex flex-col bg-white">
+      {/* Dynamic Header based on active_template */}
+      <Suspense fallback={<div className="h-16 bg-white border-b animate-pulse" />}>
+        <Header config={config} onOpenAssistant={() => setAssistantOpen(true)} />
+      </Suspense>
+
+      {/* Main content */}
+      <main className="flex-1">
+        <Suspense fallback={<LoadingScreen />}>
+          <Routes>
+            {/* Home uses template-specific component */}
+            <Route path="/" element={<Home config={config} />} />
+            
+            {/* Shared pages - same across all templates */}
+            <Route path="/tiendas" element={<Stores config={config} />} />
+            <Route path="/promos" element={<Promos config={config} />} />
+          </Routes>
+        </Suspense>
+      </main>
+
+      {/* Dynamic Footer based on active_template */}
+      <Suspense fallback={<div className="h-48 bg-gray-900 animate-pulse" />}>
+        <Footer config={config} />
+      </Suspense>
+
+      {/* AI Assistant Modal - shared across templates */}
+      {config?.settings?.ai_assistant_enabled !== false && (
+        <AIAssistant
+          isOpen={assistantOpen}
+          onClose={() => setAssistantOpen(false)}
+          config={config}
+        />
+      )}
+
+      {/* Floating AI Button (mobile) */}
+      {config?.settings?.ai_assistant_enabled !== false && !assistantOpen && (
+        <button
+          onClick={() => setAssistantOpen(true)}
+          className="fixed bottom-6 right-6 w-14 h-14 bg-primary-600 text-white rounded-full shadow-lg hover:bg-primary-700 transition-all hover:scale-110 flex items-center justify-center z-40 lg:hidden btn-press"
+          aria-label="Abrir asistente"
+          data-testid="ai-assistant-fab"
+        >
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+          </svg>
+        </button>
+      )}
+    </div>
+  )
+}
+
+/**
+ * MULTI-TENANT ARCHITECTURE NOTES (for future implementation):
+ * 
+ * Current: active_template is GLOBAL from portal_config table
+ * 
+ * Future options:
+ * 
+ * 1. Per-Corporativo template:
+ *    - Add corporativo_id to portal_config or create corporativo_config table
+ *    - API: /api/public/portal-config?corporativo_id=X
+ *    - Each corporativo can have its own template
+ * 
+ * 2. Per-Empresa (store) template:
+ *    - Already exists: empresa.template_config column
+ *    - For storefront views only (not portal)
+ *    - Store pages at /t/{handle} use their own template
+ * 
+ * 3. Hierarchy override:
+ *    - Portal default → Corporativo override → Empresa override
+ *    - const activeTemplate = empresa?.template || corporativo?.template || config?.active_template
+ * 
+ * The current architecture supports this by:
+ * - Template registry pattern (easy to add new templates)
+ * - Config-driven template selection
+ * - Lazy loading for performance
+ * - Separation of concerns (templates vs shared pages)
+ */
+
+/* === AUTO: PORTAL_TEMPLATE_ROUTER_START === */
+/**
+ * AUTO PATCH V2: portal template router
+ */
+function resolvePortalTemplate(config){
+  const t = (config?.active_template || config?.portal_template || config?.template || "default").toString();
+  if (t === "market_v2" || t === "default" || t === "modern" || t === "minimal" || t === "bold") return t;
+  return "default";
+}
+
+// NOTE: wire this into your render where you currently pick a template.
+// Example usage (you can keep your existing logic and just swap component):
+// const tpl = resolvePortalTemplate(config);
+// const Home = tpl==="market_v2"?MarketHome : tpl==="modern"?ModernHome : tpl==="minimal"?MinimalHome : tpl==="bold"?BoldHome : DefaultHome;
+/* === AUTO: PORTAL_TEMPLATE_ROUTER_END === */
+

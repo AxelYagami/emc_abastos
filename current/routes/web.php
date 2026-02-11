@@ -48,6 +48,16 @@ Route::get('/producto/{producto}', [StoreController::class, 'show'])->name('stor
 // Dynamic portal routes - MUST be after all other specific routes
 // These are registered at the bottom of the file
 
+// Storage files (serve directly through Laravel to fix Windows symlink issues)
+Route::get('/storage/{path}', function ($path) {
+    $storagePath = storage_path('app/public/' . $path);
+    if (!file_exists($storagePath)) {
+        abort(404);
+    }
+    $mimeType = mime_content_type($storagePath);
+    return response()->file($storagePath, ['Content-Type' => $mimeType]);
+})->where('path', '.*')->name('storage.serve');
+
 // Cart
 Route::get('/carrito', [CartController::class, 'index'])->name('cart.index');
 Route::post('/carrito/agregar', [CartController::class, 'add'])->name('cart.add');
