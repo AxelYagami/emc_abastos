@@ -13,6 +13,7 @@ class Portal extends Model
 
     protected $casts = [
         'settings' => 'array',
+        'dominios' => 'array',
         'activo' => 'boolean',
         'flyer_enabled' => 'boolean',
         'show_prices_in_portal' => 'boolean',

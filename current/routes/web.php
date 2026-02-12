@@ -27,19 +27,59 @@ use App\Http\Controllers\Admin\PortalConfigController;
 use App\Http\Controllers\Admin\StoreDomainsController;
 use App\Http\Controllers\Admin\StorePromotionsController;
 
-// Home redirect (configurable via PortalConfig)
+// DEBUG TEMPORAL
+Route::get('/debug-portal', function () {
+    $currentDomain = request()->getHost();
+    $portalId = session('portal_id');
+    $portales = \App\Models\Portal::where('activo', true)->get();
+
+    return response()->json([
+        'current_domain' => $currentDomain,
+        'session_portal_id' => $portalId,
+        'portales' => $portales->map(fn($p) => [
+            'id' => $p->id,
+            'nombre' => $p->nombre,
+            'slug' => $p->slug,
+            'dominios' => $p->dominios
+        ])
+    ]);
+});
+
+// Home redirect - Checks for domain-detected portal first
 Route::get('/', function () {
+    // Check if portal was detected by domain
+    $portalId = session('portal_id');
+    if ($portalId) {
+        $portal = \App\Models\Portal::find($portalId);
+        if ($portal && $portal->activo) {
+            return redirect('/' . $portal->slug);
+        }
+    }
+
+    // No portal detected - use default redirect
     $path = \App\Models\PortalConfig::get('home_redirect_path', 'portal');
     return redirect('/' . ltrim($path, '/'));
 })->name('home.redirect');
 
-// Legacy portal route (redirect to first active portal)
+// Store home route - Detects portal context and redirects accordingly
 Route::get('/portal', function () {
+    // Check if portal was detected by domain (via DetectPortalByDomain middleware)
+    $portalId = session('portal_id');
+    if ($portalId) {
+        $portal = \App\Models\Portal::find($portalId);
+        if ($portal && $portal->activo) {
+            return redirect('/' . $portal->slug);
+        }
+    }
+
+    // Fallback: redirect to first active portal
     $portal = \App\Models\Portal::where('activo', true)->first();
     if ($portal) {
         return redirect('/' . $portal->slug);
     }
-    return app(StoreController::class)->index(request());
+
+    // No portals available - show generic store
+    return redirect('/t')->with('info', 'No hay portales activos disponibles');
 })->name('store.home');
 
 // Product detail page

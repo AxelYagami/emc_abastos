@@ -5,8 +5,7 @@
     $placeholderSvg = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400' viewBox='0 0 400 400'%3E%3Crect width='400' height='400' fill='%23f3f4f6'/%3E%3Cg fill='%239ca3af'%3E%3Crect x='160' y='140' width='80' height='80' rx='8'/%3E%3Cpath d='M175 165 L185 155 L205 175 L215 165 L225 185 L175 185 Z' fill='%23d1d5db'/%3E%3Ccircle cx='185' cy='160' r='8' fill='%23d1d5db'/%3E%3C/g%3E%3C/svg%3E";
 @endphp
 
-<article class="group bg-white rounded-2xl shadow-premium overflow-hidden hover-lift"
-         x-data="{ qty: 1, adding: false }">
+<article class="group bg-white rounded-2xl shadow-premium overflow-hidden hover-lift">
     <!-- Product Image -->
     <a href="{{ route('store.producto', $producto) }}"
        class="block aspect-product bg-slate-100 relative overflow-hidden">
@@ -51,48 +50,36 @@
             @endif
         </div>
 
-        <!-- Quantity Selector -->
-        <div class="mt-4 flex items-center gap-2">
-            <div class="flex items-center bg-slate-100 rounded-xl overflow-hidden">
+        <!-- Quantity Selector + Add Button -->
+        <div class="mt-4 flex items-stretch gap-2">
+            <div class="flex items-center border-2 border-slate-200 rounded-lg overflow-hidden bg-white">
                 <button type="button"
-                        @click="qty = Math.max(1, qty - 1)"
-                        class="w-10 h-10 flex items-center justify-center text-slate-600 hover:bg-slate-200 transition-colors">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"/>
-                    </svg>
+                        onclick="const input = this.nextElementSibling; input.value = Math.max(1, parseInt(input.value||1) - 1); input.dispatchEvent(new Event('input'));"
+                        class="px-3 py-2 hover:bg-slate-50 text-slate-600 font-bold transition-colors">
+                    −
                 </button>
-                <span class="w-10 text-center font-semibold text-slate-800" x-text="qty">1</span>
+                <input type="number"
+                       value="1"
+                       min="1"
+                       step="1"
+                       id="qty_{{ $producto->id }}"
+                       class="w-14 text-center border-0 py-2 focus:ring-0 focus:outline-none font-semibold text-slate-800"
+                       oninput="this.value = Math.max(1, parseInt(this.value) || 1)">
                 <button type="button"
-                        @click="qty = Math.min(99, qty + 1)"
-                        class="w-10 h-10 flex items-center justify-center text-slate-600 hover:bg-slate-200 transition-colors">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                    </svg>
+                        onclick="const input = this.previousElementSibling; input.value = parseInt(input.value||1) + 1; input.dispatchEvent(new Event('input'));"
+                        class="px-3 py-2 hover:bg-slate-50 text-slate-600 font-bold transition-colors">
+                    +
                 </button>
             </div>
-        </div>
-
-        <!-- Add to Cart Button -->
-        <button type="button"
-                @click="adding = true; addToCart({{ $producto->id }}, qty, $el).finally(() => adding = false)"
-                :disabled="adding"
-                class="mt-4 w-full py-3 rounded-xl font-semibold text-white transition-all duration-300 flex items-center justify-center gap-2 disabled:opacity-70"
-                style="background-color: var(--brand-primary);"
-                :class="adding ? '' : 'hover:shadow-lg hover:scale-[1.02] active:scale-[0.98]'">
-            <template x-if="!adding">
-                <span class="flex items-center gap-2">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>
-                    </svg>
-                    Agregar
-                </span>
-            </template>
-            <template x-if="adding">
-                <svg class="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
-                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+            <button type="button"
+                    onclick="const qty = parseInt(document.getElementById('qty_{{ $producto->id }}').value) || 1; storefrontApp().addToCart({{ $producto->id }}, qty, this)"
+                    class="flex-1 px-4 py-2 rounded-lg font-semibold text-white transition-all flex items-center justify-center gap-2 hover:shadow-md"
+                    style="background: var(--brand-primary);">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
                 </svg>
-            </template>
-        </button>
+                Agregar
+            </button>
+        </div>
     </div>
 </article>

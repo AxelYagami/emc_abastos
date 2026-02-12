@@ -166,22 +166,10 @@
                         {{-- Modern Product Card --}}
                         <div class="group bg-white rounded-2xl shadow-sm hover:shadow-premium-lg transition-all duration-300 overflow-hidden border border-slate-100">
                             <div class="relative aspect-square overflow-hidden bg-slate-100">
-                                <img src="{{ $producto->display_image ?? $producto->imagen_url ?? '/images/producto-default.svg' }}" 
+                                <img src="{{ $producto->display_image ?? $producto->imagen_url ?? '/images/producto-default.svg' }}"
                                      alt="{{ $producto->nombre }}"
                                      class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                                      loading="{{ $index > 3 ? 'lazy' : 'eager' }}">
-                                
-                                {{-- Quick Add Button --}}
-                                <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                    <button type="button"
-                                            onclick="storefrontApp().addToCart({{ $producto->id }}, 1, this)"
-                                            class="px-6 py-3 bg-white text-slate-800 rounded-xl font-semibold transform translate-y-4 group-hover:translate-y-0 transition-transform flex items-center gap-2">
-                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
-                                        </svg>
-                                        Agregar
-                                    </button>
-                                </div>
 
                                 {{-- Category Badge --}}
                                 @if($producto->categoria)
@@ -190,16 +178,48 @@
                                 </span>
                                 @endif
                             </div>
-                            
+
                             <div class="p-5">
                                 <h3 class="font-semibold text-slate-800 mb-2 line-clamp-2 group-hover:text-[var(--brand-primary)] transition-colors">
                                     {{ $producto->nombre }}
                                 </h3>
-                                <div class="flex items-center justify-between">
+                                <div class="flex items-center justify-between mb-3">
                                     <span class="text-2xl font-bold" style="color: var(--brand-primary);">
                                         ${{ number_format($producto->precio, 2) }}
                                     </span>
-                                    <span class="text-xs text-slate-400">{{ $producto->unidad ?? 'unidad' }}</span>
+                                    <span class="text-xs text-slate-500 font-medium">por {{ $producto->unidad ?? 'unidad' }}</span>
+                                </div>
+
+                                {{-- Quantity Selector + Add Button --}}
+                                <div class="flex items-stretch gap-2">
+                                    <div class="flex items-center border-2 border-slate-200 rounded-lg overflow-hidden bg-white">
+                                        <button type="button"
+                                                onclick="const input = this.nextElementSibling; input.value = Math.max(1, parseInt(input.value||1) - 1); input.dispatchEvent(new Event('input'));"
+                                                class="px-3 py-2 hover:bg-slate-50 text-slate-600 font-bold transition-colors">
+                                            −
+                                        </button>
+                                        <input type="number"
+                                               value="1"
+                                               min="1"
+                                               step="1"
+                                               id="qty_{{ $producto->id }}"
+                                               class="w-14 text-center border-0 py-2 focus:ring-0 focus:outline-none font-semibold text-slate-800"
+                                               oninput="this.value = Math.max(1, parseInt(this.value) || 1)">
+                                        <button type="button"
+                                                onclick="const input = this.previousElementSibling; input.value = parseInt(input.value||1) + 1; input.dispatchEvent(new Event('input'));"
+                                                class="px-3 py-2 hover:bg-slate-50 text-slate-600 font-bold transition-colors">
+                                            +
+                                        </button>
+                                    </div>
+                                    <button type="button"
+                                            onclick="const qty = parseInt(document.getElementById('qty_{{ $producto->id }}').value) || 1; storefrontApp().addToCart({{ $producto->id }}, qty, this)"
+                                            class="flex-1 px-4 py-2 rounded-lg font-semibold text-white transition-all flex items-center justify-center gap-2 hover:shadow-md"
+                                            style="background: var(--brand-primary);">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                                        </svg>
+                                        Agregar
+                                    </button>
                                 </div>
                             </div>
                         </div>

@@ -102,7 +102,10 @@
 
         <!-- Back to Store -->
         <div class="mt-8 text-center">
-            <a href="{{ route('store.home') }}"
+            @php
+                $storeHandle = $orden->empresa?->handle ?? session('store_handle');
+            @endphp
+            <a href="{{ $storeHandle ? route('store.handle.home', ['handle' => $storeHandle]) : route('store.home') }}"
                class="inline-flex items-center gap-2 font-semibold transition-colors hover:underline"
                style="color: var(--brand-primary);">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -366,6 +366,92 @@
                     <p class="text-xs text-gray-500 mt-3">Si solo habilitas una opcion, se seleccionara automaticamente en el checkout.</p>
                 </div>
 
+                <!-- Delivery Settings -->
+                <div x-data="{
+                    zones: {{ json_encode(old('delivery_zones', $empresa->delivery_zones ?? [])) }},
+                    addZone() {
+                        this.zones.push({ name: '', cost: '' });
+                    },
+                    removeZone(index) {
+                        this.zones.splice(index, 1);
+                    }
+                }" class="bg-white border rounded-lg p-4 space-y-4">
+                    <h4 class="font-medium text-gray-800 mb-4">Configuracion de Envio a Domicilio</h4>
+
+                    <!-- Free Delivery Option -->
+                    <div class="border border-gray-200 rounded-lg p-4">
+                        <label class="flex items-start gap-3 cursor-pointer">
+                            <input type="checkbox" name="delivery_free_enabled" value="1"
+                                   {{ old('delivery_free_enabled', $empresa->delivery_free_enabled ?? false) ? 'checked' : '' }}
+                                   class="h-5 w-5 text-primary-600 focus:ring-primary-500 border-gray-300 rounded mt-0.5"
+                                   onchange="document.getElementById('delivery_free_amount').disabled = !this.checked">
+                            <div class="flex-1">
+                                <div class="font-medium text-gray-800">Envio gratis a partir de cierta cantidad</div>
+                                <div class="text-sm text-gray-500 mb-3">Los clientes obtienen envio gratis si su compra supera el monto minimo</div>
+                                <div class="max-w-xs">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Monto minimo ($)</label>
+                                    <input type="number" name="delivery_free_min_amount" id="delivery_free_amount" step="0.01" min="0"
+                                           value="{{ old('delivery_free_min_amount', $empresa->delivery_free_min_amount) }}"
+                                           {{ old('delivery_free_enabled', $empresa->delivery_free_enabled ?? false) ? '' : 'disabled' }}
+                                           class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500"
+                                           placeholder="Ej: 500.00">
+                                </div>
+                            </div>
+                        </label>
+                    </div>
+
+                    <!-- Delivery Zones Option -->
+                    <div class="border border-gray-200 rounded-lg p-4">
+                        <label class="flex items-start gap-3 cursor-pointer mb-4">
+                            <input type="checkbox" name="delivery_zones_enabled" value="1"
+                                   {{ old('delivery_zones_enabled', $empresa->delivery_zones_enabled ?? false) ? 'checked' : '' }}
+                                   class="h-5 w-5 text-primary-600 focus:ring-primary-500 border-gray-300 rounded mt-0.5"
+                                   x-ref="zonesCheckbox"
+                                   @change="if (!$event.target.checked && zones.length === 0) { addZone(); }">
+                            <div class="flex-1">
+                                <div class="font-medium text-gray-800">Envio con costo segun zona de cobertura</div>
+                                <div class="text-sm text-gray-500">Define diferentes zonas geograficas con su respectivo costo de envio</div>
+                            </div>
+                        </label>
+
+                        <div x-show="$refs.zonesCheckbox.checked" class="space-y-3 pl-8">
+                            <template x-for="(zone, index) in zones" :key="index">
+                                <div class="flex gap-2">
+                                    <input type="text"
+                                           :name="'delivery_zones[' + index + '][name]'"
+                                           x-model="zone.name"
+                                           placeholder="Nombre de la zona (ej: Centro, Norte, Sur)"
+                                           class="flex-1 px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500 text-sm">
+                                    <input type="number"
+                                           :name="'delivery_zones[' + index + '][cost]'"
+                                           x-model="zone.cost"
+                                           step="0.01" min="0"
+                                           placeholder="Costo"
+                                           class="w-32 px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500 text-sm">
+                                    <button type="button"
+                                            @click="removeZone(index)"
+                                            class="px-3 py-2 text-red-600 hover:bg-red-50 rounded-lg border border-red-200 text-sm">
+                                        Eliminar
+                                    </button>
+                                </div>
+                            </template>
+
+                            <button type="button"
+                                    @click="addZone()"
+                                    class="flex items-center gap-2 px-4 py-2 text-primary-600 hover:bg-primary-50 rounded-lg border border-primary-200 text-sm font-medium">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                                </svg>
+                                Agregar zona
+                            </button>
+                        </div>
+                    </div>
+
+                    <p class="text-xs text-gray-500">
+                        <strong>Nota:</strong> Estas configuraciones se aplicaran en el checkout. Si ambas estan activas, el envio gratis tiene prioridad cuando se cumpla el monto minimo.
+                    </p>
+                </div>
+
                 <!-- Schedule -->
                 <div class="bg-white border rounded-lg p-4">
                     <h4 class="font-medium text-gray-800 mb-4">Horario de Atencion</h4>

@@ -136,6 +136,10 @@ class EmpresasController extends Controller
             'pickup_eta_hours' => $data['pickup_eta_hours'] ?? 2.0,
             'enable_pickup' => $data['enable_pickup'] ?? true,
             'enable_delivery' => $data['enable_delivery'] ?? true,
+            'delivery_free_enabled' => $data['delivery_free_enabled'] ?? false,
+            'delivery_free_min_amount' => $data['delivery_free_min_amount'] ?? null,
+            'delivery_zones_enabled' => $data['delivery_zones_enabled'] ?? false,
+            'delivery_zones' => $data['delivery_zones'] ?? null,
         ]);
 
         // Auto-create store_domain with path t/{handle}
@@ -204,6 +208,13 @@ class EmpresasController extends Controller
             // Fulfillment options
             'enable_pickup' => 'boolean',
             'enable_delivery' => 'boolean',
+            // Delivery settings
+            'delivery_free_enabled' => 'boolean',
+            'delivery_free_min_amount' => 'nullable|numeric|min:0',
+            'delivery_zones_enabled' => 'boolean',
+            'delivery_zones' => 'nullable|array',
+            'delivery_zones.*.name' => 'required|string|max:100',
+            'delivery_zones.*.cost' => 'required|numeric|min:0',
         ]);
 
         // Handle logo
@@ -255,6 +266,15 @@ class EmpresasController extends Controller
             $templateConfig['storefront_template'] = $data['storefront_template'];
         }
 
+        // Process delivery zones - filter out empty entries
+        $deliveryZones = null;
+        if ($request->boolean('delivery_zones_enabled') && !empty($data['delivery_zones'])) {
+            $deliveryZones = array_filter($data['delivery_zones'], function ($zone) {
+                return !empty($zone['name']) && isset($zone['cost']);
+            });
+            $deliveryZones = array_values($deliveryZones); // Re-index array
+        }
+
         $empresa->update([
             'portal_id' => $data['portal_id'] ?? $empresa->portal_id,
             'nombre' => $data['nombre'],
@@ -277,6 +297,10 @@ class EmpresasController extends Controller
             'pickup_eta_hours' => $data['pickup_eta_hours'] ?? $empresa->pickup_eta_hours ?? 2.0,
             'enable_pickup' => $request->boolean('enable_pickup'),
             'enable_delivery' => $request->boolean('enable_delivery'),
+            'delivery_free_enabled' => $request->boolean('delivery_free_enabled'),
+            'delivery_free_min_amount' => $data['delivery_free_min_amount'] ?? null,
+            'delivery_zones_enabled' => $request->boolean('delivery_zones_enabled'),
+            'delivery_zones' => $deliveryZones,
         ]);
 
         // Sync store_domain if handle changed

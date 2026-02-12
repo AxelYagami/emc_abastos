@@ -96,18 +96,34 @@ class ProductosController extends Controller
         return redirect()->route('admin.productos.index')->with('ok', 'Producto creado');
     }
 
-    public function edit(Request $request, int $id)
+    public function edit(Request $request, Producto $producto)
     {
         $empresaId = $this->resolveEmpresaId($request);
-        $producto = Producto::where('empresa_id', $empresaId)->findOrFail($id);
+
+        // Check empresa ownership
+        if ($producto->empresa_id !== $empresaId) {
+            // If superadmin, offer to switch empresa
+            if ($this->isSuperAdmin()) {
+                return redirect()
+                    ->route('admin.productos.edit', ['producto' => $producto->id, 'empresa_id' => $producto->empresa_id])
+                    ->with('info', "Producto pertenece a empresa ID {$producto->empresa_id}. Cambiando contexto...");
+            }
+
+            abort(403, 'Este producto no pertenece a tu empresa actual');
+        }
+
         $categorias = Categoria::where('empresa_id', $empresaId)->orderBy('orden')->orderBy('nombre')->get();
         return view('admin.productos.edit', compact('producto', 'categorias'));
     }
 
-    public function update(Request $request, int $id)
+    public function update(Request $request, Producto $producto)
     {
         $empresaId = $this->resolveEmpresaId($request);
-        $producto = Producto::where('empresa_id', $empresaId)->findOrFail($id);
+
+        // Check empresa ownership
+        if ($producto->empresa_id !== $empresaId) {
+            abort(403, 'Este producto no pertenece a tu empresa actual');
+        }
 
         $data = $request->validate([
             'nombre' => ['required','string','max:160'],
@@ -183,10 +199,15 @@ class ProductosController extends Controller
         }
     }
 
-    public function destroy(Request $request, int $id)
+    public function destroy(Request $request, Producto $producto)
     {
         $empresaId = $this->resolveEmpresaId($request);
-        $producto = Producto::where('empresa_id', $empresaId)->findOrFail($id);
+
+        // Check empresa ownership
+        if ($producto->empresa_id !== $empresaId) {
+            abort(403, 'Este producto no pertenece a tu empresa actual');
+        }
+
         $producto->delete();
 
         return redirect()->route('admin.productos.index')->with('ok', 'Producto eliminado');

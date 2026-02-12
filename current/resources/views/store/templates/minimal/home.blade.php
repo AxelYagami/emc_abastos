@@ -78,35 +78,55 @@
         {{-- Products Grid (minimal cards) --}}
         <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 lg:gap-10">
             @forelse($productos as $index => $producto)
-                <a href="#" 
-                   onclick="storefrontApp().showProductQuickView({{ $producto->id }}); return false;"
-                   class="group block">
+                <div class="group">
                     {{-- Image Container --}}
                     <div class="relative aspect-square bg-slate-50 rounded-2xl overflow-hidden mb-4">
-                        <img src="{{ $producto->display_image ?? $producto->imagen_url ?? '/images/producto-default.svg' }}" 
+                        <img src="{{ $producto->display_image ?? $producto->imagen_url ?? '/images/producto-default.svg' }}"
                              alt="{{ $producto->nombre }}"
                              class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                              loading="{{ $index > 7 ? 'lazy' : 'eager' }}">
-                        
-                        {{-- Quick Add (appears on hover) --}}
-                        <div class="absolute inset-x-4 bottom-4 opacity-0 group-hover:opacity-100 transform translate-y-2 group-hover:translate-y-0 transition-all">
-                            <button type="button"
-                                    onclick="event.preventDefault(); event.stopPropagation(); storefrontApp().addToCart({{ $producto->id }}, 1, this)"
-                                    class="w-full py-3 text-white text-sm font-medium rounded-xl shadow-lg transition-transform hover:scale-[1.02]"
-                                    style="background-color: var(--brand-primary);">
-                                Agregar
-                            </button>
-                        </div>
                     </div>
-                    
+
                     {{-- Product Info (minimal) --}}
-                    <h3 class="text-slate-800 font-medium leading-snug group-hover:underline underline-offset-4">
+                    <h3 class="text-slate-800 font-medium leading-snug mb-1">
                         {{ $producto->nombre }}
                     </h3>
-                    <p class="mt-1 text-lg font-semibold" style="color: var(--brand-primary);">
-                        ${{ number_format($producto->precio, 2) }}
-                    </p>
-                </a>
+                    <div class="flex items-baseline gap-2 mb-3">
+                        <p class="text-lg font-semibold" style="color: var(--brand-primary);">
+                            ${{ number_format($producto->precio, 2) }}
+                        </p>
+                        <span class="text-xs text-slate-400">/ {{ $producto->unidad ?? 'unidad' }}</span>
+                    </div>
+
+                    {{-- Quantity Selector + Add Button --}}
+                    <div class="flex items-stretch gap-2">
+                        <div class="flex items-center border border-slate-200 rounded-lg overflow-hidden bg-white">
+                            <button type="button"
+                                    onclick="const input = this.nextElementSibling; input.value = Math.max(1, parseInt(input.value||1) - 1); input.dispatchEvent(new Event('input'));"
+                                    class="px-2.5 py-1.5 hover:bg-slate-50 text-slate-600 text-sm transition-colors">
+                                −
+                            </button>
+                            <input type="number"
+                                   value="1"
+                                   min="1"
+                                   step="1"
+                                   id="qty_{{ $producto->id }}"
+                                   class="w-11 text-center border-0 py-1.5 text-sm focus:ring-0 focus:outline-none font-medium text-slate-800"
+                                   oninput="this.value = Math.max(1, parseInt(this.value) || 1)">
+                            <button type="button"
+                                    onclick="const input = this.previousElementSibling; input.value = parseInt(input.value||1) + 1; input.dispatchEvent(new Event('input'));"
+                                    class="px-2.5 py-1.5 hover:bg-slate-50 text-slate-600 text-sm transition-colors">
+                                +
+                            </button>
+                        </div>
+                        <button type="button"
+                                onclick="const qty = parseInt(document.getElementById('qty_{{ $producto->id }}').value) || 1; storefrontApp().addToCart({{ $producto->id }}, qty, this)"
+                                class="flex-1 py-1.5 text-white text-sm font-medium rounded-lg transition-all hover:shadow-md"
+                                style="background-color: var(--brand-primary);">
+                            Agregar
+                        </button>
+                    </div>
+                </div>
             @empty
                 <div class="col-span-full text-center py-20">
                     <p class="text-slate-400 text-lg">Sin productos disponibles</p>

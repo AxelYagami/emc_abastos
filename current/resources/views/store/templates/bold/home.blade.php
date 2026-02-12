@@ -131,27 +131,48 @@
                         </div>
                         @endif
 
-                        {{-- Quick Add Overlay --}}
-                        <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-center pb-6">
+                    </div>
+
+                    {{-- Product Info --}}
+                    <div class="p-4">
+                        <h3 class="font-bold text-slate-800 line-clamp-2 leading-tight mb-2">
+                            {{ $producto->nombre }}
+                        </h3>
+                        <p class="text-sm text-slate-500 mb-3">
+                            por {{ $producto->unidad ?? 'unidad' }}
+                        </p>
+
+                        {{-- Quantity Selector + Add Button --}}
+                        <div class="flex items-stretch gap-2">
+                            <div class="flex items-center border-2 border-slate-300 rounded-lg overflow-hidden bg-white">
+                                <button type="button"
+                                        onclick="const input = this.nextElementSibling; input.value = Math.max(1, parseInt(input.value||1) - 1); input.dispatchEvent(new Event('input'));"
+                                        class="px-3 py-2 hover:bg-slate-50 text-slate-700 font-bold transition-colors">
+                                    −
+                                </button>
+                                <input type="number"
+                                       value="1"
+                                       min="1"
+                                       step="1"
+                                       id="qty_{{ $producto->id }}"
+                                       class="w-12 text-center border-0 py-2 focus:ring-0 focus:outline-none font-bold text-slate-800"
+                                       oninput="this.value = Math.max(1, parseInt(this.value) || 1)">
+                                <button type="button"
+                                        onclick="const input = this.previousElementSibling; input.value = parseInt(input.value||1) + 1; input.dispatchEvent(new Event('input'));"
+                                        class="px-3 py-2 hover:bg-slate-50 text-slate-700 font-bold transition-colors">
+                                    +
+                                </button>
+                            </div>
                             <button type="button"
-                                    onclick="storefrontApp().addToCart({{ $producto->id }}, 1, this)"
-                                    class="px-6 py-3 bg-white text-slate-900 rounded-xl font-bold shadow-xl transform translate-y-4 group-hover:translate-y-0 transition-all flex items-center gap-2">
+                                    onclick="const qty = parseInt(document.getElementById('qty_{{ $producto->id }}').value) || 1; storefrontApp().addToCart({{ $producto->id }}, qty, this)"
+                                    class="flex-1 px-3 py-2 rounded-lg font-bold text-white transition-all flex items-center justify-center gap-2 hover:shadow-lg"
+                                    style="background: linear-gradient(135deg, var(--brand-primary), var(--brand-accent));">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
                                 </svg>
-                                Agregar
+                                <span class="hidden sm:inline">Agregar</span>
                             </button>
                         </div>
-                    </div>
-                    
-                    {{-- Product Info --}}
-                    <div class="p-4">
-                        <h3 class="font-bold text-slate-800 line-clamp-2 leading-tight">
-                            {{ $producto->nombre }}
-                        </h3>
-                        <p class="mt-1 text-sm text-slate-500">
-                            {{ $producto->unidad ?? 'Por unidad' }}
-                        </p>
                     </div>
                 </div>
             @empty

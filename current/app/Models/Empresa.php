@@ -35,6 +35,10 @@ class Empresa extends Model
         'pickup_eta_hours',
         'enable_pickup',
         'enable_delivery',
+        'delivery_free_enabled',
+        'delivery_free_min_amount',
+        'delivery_zones_enabled',
+        'delivery_zones',
         'template_config',
     ];
 
@@ -43,11 +47,15 @@ class Empresa extends Model
         'settings' => 'array',
         'tags' => 'array',
         'template_config' => 'array',
+        'delivery_zones' => 'array',
         'activa' => 'boolean',
         'is_featured' => 'boolean',
         'enable_pickup' => 'boolean',
         'enable_delivery' => 'boolean',
+        'delivery_free_enabled' => 'boolean',
+        'delivery_zones_enabled' => 'boolean',
         'pickup_eta_hours' => 'decimal:1',
+        'delivery_free_min_amount' => 'decimal:2',
     ];
 
     /**

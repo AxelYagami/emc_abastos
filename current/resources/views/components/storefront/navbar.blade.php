@@ -57,9 +57,13 @@
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>
                     </svg>
-                    <span class="hidden sm:inline">Carrito</span>
+                    <div class="hidden sm:flex flex-col items-start leading-tight">
+                        <span class="text-xs opacity-90">Carrito</span>
+                        <span x-show="cartCount > 0" x-text="cartCount + ' • ' + cartTotal" x-cloak class="text-sm font-bold">0</span>
+                        <span x-show="cartCount === 0" x-cloak class="text-sm">Vacio</span>
+                    </div>
                     <span x-show="cartCount > 0" x-text="cartCount" x-cloak
-                          class="absolute -top-1 -right-1 min-w-[20px] h-5 flex items-center justify-center text-xs font-bold rounded-full bg-white shadow-sm"
+                          class="sm:hidden absolute -top-1 -right-1 min-w-[20px] h-5 flex items-center justify-center text-xs font-bold rounded-full bg-white shadow-sm"
                           style="color: {{ $primaryColor }};">
                     </span>
                 </a>

@@ -88,6 +88,9 @@
         <div>
           <label class="block text-xs text-gray-600 mb-1">URL de imagen externa</label>
           <input type="url" name="imagen_url" class="w-full border rounded p-2 text-sm" placeholder="https://ejemplo.com/imagen.jpg" value="{{ old('imagen_url') }}">
+          <a href="#" onclick="event.preventDefault(); const nombre = document.querySelector('input[name=nombre]')?.value || 'producto'; window.open('https://www.google.com/search?q=' + encodeURIComponent(nombre + ' fresco') + '&tbm=isch', '_blank');" class="inline-block mt-2 text-xs text-blue-600 hover:underline">
+            🔍 Buscar en Google Images
+          </a>
         </div>
       </div>
     </div>

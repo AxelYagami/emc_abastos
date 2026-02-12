@@ -195,8 +195,8 @@
     </style>
 </head>
 <body class="min-h-screen antialiased {{ $isDark ? 'bg-zinc-900 text-zinc-100' : 'bg-slate-50 text-slate-800' }}" x-data="storefrontApp()">
-    <!-- Toast Container -->
-    <div id="toast-container" class="fixed top-4 right-4 z-[100] space-y-2"></div>
+    <!-- Toast Container (positioned to not block cart) -->
+    <div id="toast-container" class="fixed top-24 right-4 z-[100] space-y-2 max-w-sm"></div>
 
     <!-- Sticky Navigation -->
     <x-storefront.navbar :app-name="$appName" :logo-url="$logoUrl" :primary-color="$primaryColor" />
@@ -299,18 +299,34 @@
                 showToast(message, type = 'success') {
                     const container = document.getElementById('toast-container');
                     const toast = document.createElement('div');
-                    const bgColor = type === 'success' ? 'bg-emerald-600' : 'bg-red-600';
-                    toast.className = `toast-enter px-5 py-3 rounded-xl shadow-premium-lg ${bgColor} text-white flex items-center gap-3 font-medium`;
+                    const bgColor = type === 'success' ? 'bg-white' : 'bg-red-50';
+                    const borderColor = type === 'success' ? 'border-emerald-200' : 'border-red-200';
+                    const textColor = type === 'success' ? 'text-slate-800' : 'text-red-800';
+                    const iconColor = type === 'success' ? 'text-emerald-600' : 'text-red-600';
+
+                    toast.className = `toast-enter px-4 py-3 rounded-xl shadow-premium-xl ${bgColor} ${textColor} border-2 ${borderColor} flex items-center gap-3 font-medium backdrop-blur-sm`;
+
                     const icon = type === 'success'
-                        ? '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>'
-                        : '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>';
-                    toast.innerHTML = `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">${icon}</svg><span>${message}</span>`;
+                        ? '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>'
+                        : '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/>';
+
+                    toast.innerHTML = `
+                        <div class="flex-shrink-0">
+                            <svg class="w-6 h-6 ${iconColor}" fill="none" stroke="currentColor" viewBox="0 0 24 24">${icon}</svg>
+                        </div>
+                        <div class="flex-1">
+                            <p class="font-semibold text-sm">${message}</p>
+                            <p class="text-xs text-slate-500 mt-0.5">Revisa tu carrito para continuar</p>
+                        </div>
+                    `;
+
                     container.appendChild(toast);
+
                     setTimeout(() => {
                         toast.classList.remove('toast-enter');
                         toast.classList.add('toast-leave');
                         setTimeout(() => toast.remove(), 300);
-                    }, 3000);
+                    }, 3500);
                 }
             }
         }

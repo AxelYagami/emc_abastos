@@ -78,7 +78,10 @@
 
         <div>
           <label class="block text-xs text-gray-600 mb-1">URL de imagen externa</label>
-          <input type="url" name="imagen_url" class="w-full border rounded p-2 text-sm" placeholder="https://ejemplo.com/imagen.jpg" value="{{ old('imagen_url', $producto->imagen_url) }}">
+          <input type="url" name="imagen_url" id="imagen_url_input" class="w-full border rounded p-2 text-sm" placeholder="https://ejemplo.com/imagen.jpg" value="{{ old('imagen_url', $producto->imagen_url) }}">
+          <a href="#" onclick="event.preventDefault(); window.open('https://www.google.com/search?q={{ urlencode($producto->nombre) }}+fresco&tbm=isch', '_blank');" class="inline-block mt-2 text-xs text-blue-600 hover:underline">
+            🔍 Buscar en Google Images
+          </a>
         </div>
       </div>
     </div>
@@ -104,14 +107,16 @@
     </div>
 
     <div class="flex flex-wrap gap-2">
-      <button class="rounded-lg bg-emerald-600 text-white px-4 py-2">Guardar</button>
+      <button type="submit" class="rounded-lg bg-emerald-600 text-white px-4 py-2">Guardar</button>
       <a class="rounded-lg border px-4 py-2" href="{{ route('admin.productos.index') }}">Volver</a>
-      <form method="POST" action="{{ route('admin.productos.destroy',$producto->id) }}" onsubmit="return confirm('¿Eliminar producto?')">
-        @csrf
-        @method('DELETE')
-        <button class="rounded-lg border px-4 py-2" type="submit">Eliminar</button>
-      </form>
     </div>
+  </form>
+
+  <!-- Formulario de eliminar (separado) -->
+  <form method="POST" action="{{ route('admin.productos.destroy',$producto->id) }}" onsubmit="return confirm('¿Eliminar producto?')" class="mt-4">
+    @csrf
+    @method('DELETE')
+    <button class="rounded-lg border border-red-600 text-red-600 hover:bg-red-50 px-4 py-2" type="submit">Eliminar producto</button>
   </form>
 </div>
 @endsection

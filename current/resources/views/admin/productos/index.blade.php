@@ -39,7 +39,15 @@
         <tr>
           <td class="p-3">
             <div class="flex items-center gap-3">
-              <img src="{{ $p->display_image }}" alt="{{ $p->nombre }}" class="w-12 h-12 object-cover rounded border">
+              <div class="relative group">
+                <img src="{{ $p->display_image }}" alt="{{ $p->nombre }}" class="w-12 h-12 object-cover rounded border">
+                @if(!$p->categoria_id && $p->use_auto_image)
+                  <div class="absolute -top-1 -right-1 w-4 h-4 bg-yellow-500 rounded-full flex items-center justify-center text-white text-xs font-bold cursor-help" title="Configura categoría para imágenes más exactas">!</div>
+                  <div class="hidden group-hover:block absolute z-10 w-48 p-2 -mt-1 text-xs text-white bg-gray-900 rounded shadow-lg -left-2 top-full">
+                    💡 Configura la categoría para obtener imágenes más exactas
+                  </div>
+                @endif
+              </div>
               <div>
                 <div class="font-medium">{{ $p->nombre }}</div>
                 @if($p->sku)

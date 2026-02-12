@@ -16,10 +16,19 @@ return [
     | Image Source
     |--------------------------------------------------------------------------
     |
-    | Source for auto images: 'unsplash', 'pexels', 'placeholder'
+    | Source for auto images:
+    |   - 'pixabay' (recommended, free, 100 req/min)
+    |   - 'pexels' (requires API key, good quality)
+    |   - 'unsplash' (requires API key, artistic)
+    |   - 'placeholder' (fallback, no real images)
+    |
+    | Get API keys:
+    |   Pixabay: https://pixabay.com/api/docs/
+    |   Pexels: https://www.pexels.com/api/
+    |   Unsplash: https://unsplash.com/developers
     |
     */
-    'source' => env('IMAGES_SOURCE', 'unsplash'),
+    'source' => env('IMAGES_SOURCE', 'pixabay'),
 
     /*
     |--------------------------------------------------------------------------

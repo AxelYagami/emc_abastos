@@ -15,14 +15,33 @@ use Illuminate\Validation\Rules\Password;
 
 class RegisterController extends Controller
 {
-    public function show()
+    public function show(Request $request)
     {
-        // Get all active empresas for selection
-        $empresas = Empresa::where('activa', true)
-            ->orderBy('nombre')
-            ->get(['id', 'nombre', 'handle', 'logo_url']);
+        // Try to get current portal/empresa context
+        $portalId = $request->attributes->get('portal_id') ?? session('portal_id');
+        $empresaId = $request->attributes->get('store_id') ?? session('empresa_id');
+        $currentStore = $request->attributes->get('store');
 
-        return view('auth.register', compact('empresas'));
+        // If we have a specific store context, show only that empresa
+        if ($empresaId && $currentStore) {
+            $empresas = collect([$currentStore]);
+            $autoSelectEmpresa = $empresaId;
+        } elseif ($portalId) {
+            // Show empresas from current portal
+            $empresas = Empresa::where('portal_id', $portalId)
+                ->where('activa', true)
+                ->orderBy('nombre')
+                ->get(['id', 'nombre', 'handle', 'logo_url']);
+            $autoSelectEmpresa = null;
+        } else {
+            // Global registration - show all active empresas
+            $empresas = Empresa::where('activa', true)
+                ->orderBy('nombre')
+                ->get(['id', 'nombre', 'handle', 'logo_url']);
+            $autoSelectEmpresa = null;
+        }
+
+        return view('auth.register', compact('empresas', 'autoSelectEmpresa', 'currentStore'));
     }
 
     public function register(Request $request)
@@ -44,6 +63,11 @@ class RegisterController extends Controller
             'empresas.*' => 'exists:empresas,id',
         ]);
 
+        // Capture portal/empresa context from request or session
+        $portalId = $request->attributes->get('portal_id') ?? session('portal_id');
+        $storeId = $request->attributes->get('store_id') ?? session('empresa_id');
+        $currentStore = $request->attributes->get('store');
+
         $usuario = Usuario::create([
             'name' => $data['name'],
             'email' => $data['email'],
@@ -52,33 +76,55 @@ class RegisterController extends Controller
             'activo' => true,
         ]);
 
-        // Get selected empresas (from form or session)
+        // Get selected empresas (from form, store context, or session)
         $empresaIds = $data['empresas'] ?? [];
-        $sessionEmpresaId = $request->session()->get('empresa_id');
 
-        if (empty($empresaIds) && $sessionEmpresaId) {
-            $empresaIds = [$sessionEmpresaId];
+        // If registering from a specific store, auto-associate with that empresa
+        if ($storeId && empty($empresaIds)) {
+            $empresaIds = [$storeId];
+        }
+
+        // If no empresas selected, use session empresa as fallback
+        if (empty($empresaIds) && session('empresa_id')) {
+            $empresaIds = [session('empresa_id')];
         }
 
         // Associate user with selected empresas
         if (!empty($empresaIds)) {
+            // Get the 'cliente' role ID
+            $clienteRol = Rol::where('slug', 'cliente')->first();
+            if (!$clienteRol) {
+                // Fallback: try to get any customer-like role
+                $clienteRol = Rol::where('slug', 'like', '%cliente%')
+                    ->orWhere('nombre', 'like', '%cliente%')
+                    ->first();
+            }
+
             foreach ($empresaIds as $empresaId) {
                 DB::table('empresa_usuario')->insert([
                     'empresa_id' => $empresaId,
                     'usuario_id' => $usuario->id,
-                    'role' => 'cliente',
+                    'rol_id' => $clienteRol?->id,
+                    'activo' => true,
                     'created_at' => now(),
                     'updated_at' => now(),
                 ]);
             }
 
-            // Set first empresa as active
+            // Set first empresa as active in session
             $request->session()->put('empresa_id', $empresaIds[0]);
         }
 
         Auth::login($usuario);
         RateLimiter::clear($key);
 
-        return redirect()->intended(route('store.home'))->with('ok', 'Cuenta creada correctamente');
+        // Redirect to the store where they registered
+        if ($currentStore && $currentStore->handle) {
+            return redirect()->route('store.handle.home', ['handle' => $currentStore->handle])
+                ->with('ok', 'Cuenta creada correctamente. Bienvenido a ' . $currentStore->nombre);
+        }
+
+        // Fallback to generic store home
+        return redirect()->route('store.home')->with('ok', 'Cuenta creada correctamente');
     }
 }

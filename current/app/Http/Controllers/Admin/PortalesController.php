@@ -50,7 +50,14 @@ class PortalesController extends Controller
             'promos_per_store' => 'nullable|integer|min:1|max:10',
             'show_prices_in_portal' => 'nullable|boolean',
             'ai_assistant_enabled' => 'nullable|boolean',
+            'dominios' => 'nullable|array',
+            'dominios.*' => 'nullable|string|max:255',
         ]);
+
+        // Process dominios - filter out empty entries
+        if (isset($data['dominios'])) {
+            $data['dominios'] = array_values(array_filter($data['dominios'], fn($d) => !empty($d)));
+        }
 
         // Generate slug if empty
         if (empty($data['slug'])) {
@@ -98,6 +105,9 @@ class PortalesController extends Controller
     {
         $portal = Portal::findOrFail($id);
 
+        // Debug
+        \Log::info('Dominios recibidos:', ['dominios' => $request->input('dominios')]);
+
         $data = $request->validate([
             'nombre' => 'required|string|max:200|unique:portales,nombre,' . $id,
             'slug' => 'nullable|string|max:100|unique:portales,slug,' . $id,
@@ -125,7 +135,14 @@ class PortalesController extends Controller
             'promos_per_store' => 'nullable|integer|min:1|max:10',
             'show_prices_in_portal' => 'nullable|boolean',
             'ai_assistant_enabled' => 'nullable|boolean',
+            'dominios' => 'nullable|array',
+            'dominios.*' => 'nullable|string|max:255',
         ]);
+
+        // Process dominios - filter out empty entries
+        if (isset($data['dominios'])) {
+            $data['dominios'] = array_values(array_filter($data['dominios'], fn($d) => !empty($d)));
+        }
 
         // Handle logo upload
         if ($request->hasFile('logo')) {
